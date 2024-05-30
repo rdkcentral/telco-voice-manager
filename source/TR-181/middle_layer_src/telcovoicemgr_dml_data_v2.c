@@ -28,8 +28,6 @@ ANSC_STATUS TelcoVoiceMgrDmlDataDelete(void)
     PTELCOVOICEMGR_DML_VOICESERVICE     pDmlVoiceService     = NULL;
     PDML_SIP                            pDmlSipObj           = NULL;
     PDML_CALLCONTROL                    pDmlCallControlObj   = NULL;
-    PDML_VOIPPROFILE                    pDmlVoipProfile      = NULL;
-    PDML_CALLCONTROL_LINE               pDmlCallControlLine  = NULL;
 
 
     pTelcoVoiceMgrData = TelcoVoiceMgrDmlGetDataLocked();
@@ -116,7 +114,6 @@ ANSC_STATUS TelcoVoiceMgrDmlSetDefaultData(TELCOVOICEMGR_DML_DATA* pTelcoVoiceMg
     ULONG                             uVsIndex            = 0;
     ULONG                             uIndex              = 0;
     ULONG                             audioIndex          = 0;
-    ULONG                             uCodecIndex         = 0;
     PTELCOVOICEMGR_DML_VOICESERVICE   pDmlVoiceService    = NULL;
     PDML_SIP                          pDmlSipObj          = NULL;
     PDML_CALLCONTROL                  pDmlCallControlObj  = NULL;
@@ -1145,7 +1142,7 @@ ANSC_STATUS TelcoVoiceMgrDmlAddSipRegistrar(PDML_SIP_REGISTRAR_LIST_T pSipRegist
 ANSC_STATUS TelcoVoiceMgrDmlAddSipRegistrarAcc(PDML_SIP_REGISTRAR_ACCOUNT_LIST_T pSipRegistrarAccList, int index)
 {
     ANSC_STATUS     result  = ANSC_STATUS_FAILURE;
-    PDML_SIP_REGISTRAR   pDmlSipRegistrarAcc    = NULL;
+    PDML_SIP_REGISTRAR_ACCOUNT   pDmlSipRegistrarAcc    = NULL;
 
     if(pSipRegistrarAccList != NULL)
     {

@@ -19,6 +19,7 @@
 #include "ansc_platform.h"
 #include "telcovoicemgr_dml_backendmgr.h"
 #include "telcovoicemgr_dml_v2.h"
+#include "telcovoicemgr_services_apis_v2.h"
 #include "ccsp_trace.h"
 #include "ccsp_syslog.h"
 
@@ -589,7 +590,6 @@ ULONG VoiceService_GetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName,
 BOOL VoiceService_SetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, char* pString)
 {
     BOOL ret = FALSE;
-    ULONG uVsIndex = 0;
 
     if(ParamName == NULL || pString == NULL)
     {
@@ -610,7 +610,6 @@ BOOL VoiceService_SetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, 
         return ret;
     }
 
-    uVsIndex = pVoiceService->InstanceNumber;
 
     TELCOVOICEMGR_UNLOCK()
 

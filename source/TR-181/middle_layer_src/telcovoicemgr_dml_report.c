@@ -20,6 +20,7 @@
 #include "telcovoicemgr_dml_backendmgr.h"
 #include "telcovoicemgr_dml_report.h"
 #include "voice_report.h"
+#include "ccsp_psm_helper.h"
 
 
 #define EMPTY_BUFFER "Schema Buffer is empty"
@@ -200,9 +201,7 @@ X_RDK_Report_VoiceService_GetParamStringValue
         ULONG*                      pUlSize
     )
 {
-    PTELCOVOICE_CONTEXT_LINK_OBJECT         pMyObject             = (PTELCOVOICE_CONTEXT_LINK_OBJECT)g_pTelcoVoiceBEManager->hServices;
-    PDML_X_RDK_REPORT_VOICE_SERVICE  pVoiceServiceReport   = (PDML_X_RDK_REPORT_VOICE_SERVICE)pMyObject->pVoiceServiceReport;
-
+ 
     /* check the parameter name and set the corresponding value */
     if (strcmp(ParamName, "Schema") == 0)
     {

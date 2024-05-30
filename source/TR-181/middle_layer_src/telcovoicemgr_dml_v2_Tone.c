@@ -22,6 +22,7 @@
 #include "telcovoicemgr_dml_v2.h"
 #include "ccsp_trace.h"
 #include "ccsp_syslog.h"
+#include "telcovoicemgr_dml_hal.h"
 
 /**********************************************************************
 
@@ -2581,10 +2582,13 @@ BOOL TelcoVoiceMgrDml_Tone_EventProfileList_EvtList_SetParamStringValue(ANSC_HAN
     }
     else if (strcmp(ParamName, "Function") == 0)
     {
-        char enumValue[][STR_LEN_32]={"Busy","Confirmation","Dial","LineMessagesWaiting","OffHookWarning",
-        "RingBack","ReOrder","Stutterdial","CallWaiting1","CallWaiting2","CallWaiting3","CallWaiting4",
-        "AlertingSignal","SpecialDial","SpecialInfo","Release","Congestion","UserDefined1","UserDefined2",
-        "UserDefined3","UserDefined4"};
+      
+        /* This implementaion is incomplete, commenting the below enum table for avoiding the compiler
+        warning. The implematation must be completed */ 
+        //char enumValue[][STR_LEN_32]={"Busy","Confirmation","Dial","LineMessagesWaiting","OffHookWarning",
+        //"RingBack","ReOrder","Stutterdial","CallWaiting1","CallWaiting2","CallWaiting3","CallWaiting4",
+        //"AlertingSignal","SpecialDial","SpecialInfo","Release","Congestion","UserDefined1","UserDefined2",
+        //"UserDefined3","UserDefined4"};
 
         snprintf(HalName, MAX_STR_LEN, "Device.Services.VoiceService.%d.Tone.EventProfile.%d.Event.%d.Function",uVsIndex,uEvtProfIndex,uEvtIndex);
 

@@ -83,15 +83,12 @@ int ANSC_EXPORT_API TELCOVOICEMGR_Init(ULONG uMaxVersionSupported, void* hCosaPl
     COSASetParamValueBoolProc       pSetParamValueBoolProc      = (COSASetParamValueBoolProc         )NULL;
     COSAGetInstanceNumbersProc      pGetInstanceNumbersProc     = (COSAGetInstanceNumbersProc        )NULL;
 
-    COSAGetCommonHandleProc         pGetCHProc                  = (COSAGetCommonHandleProc           )NULL;
     COSAValidateHierarchyInterfaceProc
                                     pValInterfaceProc           = (COSAValidateHierarchyInterfaceProc)NULL;
     COSAGetHandleProc               pGetRegistryRootFolder      = (COSAGetHandleProc                 )NULL;
     COSAGetInstanceNumberByIndexProc
                                     pGetInsNumberByIndexProc    = (COSAGetInstanceNumberByIndexProc  )NULL;
-    COSAGetHandleProc               pGetMessageBusHandleProc    = (COSAGetHandleProc                 )NULL;
     COSAGetInterfaceByNameProc      pGetInterfaceByNameProc     = (COSAGetInterfaceByNameProc        )NULL;
-    ULONG                           ret                         = 0;
 
     if ( uMaxVersionSupported < THIS_PLUGIN_VERSION )
     {
@@ -1278,7 +1275,7 @@ int ANSC_EXPORT_API TELCOVOICEMGR_Init(ULONG uMaxVersionSupported, void* hCosaPl
     }
 
 
-    pGetParamValueIntProc = (COSAGetParamValueUlongProc)pPlugInfo->AcquireFunction("COSAGetParamValueInt");
+    pGetParamValueIntProc = (COSAGetParamValueIntProc)pPlugInfo->AcquireFunction("COSAGetParamValueInt");
 
     if( pGetParamValueIntProc != NULL)
     {
@@ -1425,7 +1422,7 @@ int ANSC_EXPORT_API TELCOVOICEMGR_Init(ULONG uMaxVersionSupported, void* hCosaPl
     }
 
     /* Get Message Bus Handle */
-    g_GetMessageBusHandle = (PFN_CCSPCCDM_APPLY_CHANGES)pPlugInfo->AcquireFunction("COSAGetMessageBusHandle");
+    g_GetMessageBusHandle = (ANSC_HANDLE)pPlugInfo->AcquireFunction("COSAGetMessageBusHandle");
     if ( g_GetMessageBusHandle == NULL )
     {
         goto EXIT;
@@ -1444,7 +1441,7 @@ int ANSC_EXPORT_API TELCOVOICEMGR_Init(ULONG uMaxVersionSupported, void* hCosaPl
     {
         char*   tmpSubsystemPrefix;
 
-        if ( tmpSubsystemPrefix = g_GetSubsystemPrefix(g_pDslhDmlAgent) )
+        if ( (tmpSubsystemPrefix = g_GetSubsystemPrefix(g_pDslhDmlAgent)) )
         {
             strncpy(g_SubSysPrefix_Irep, tmpSubsystemPrefix, sizeof(g_SubSysPrefix_Irep) - 1);
         }
@@ -1472,8 +1469,6 @@ EXIT:
 
 int ANSC_EXPORT_API COSA_Async_Init(ULONG uMaxVersionSupported, void* hCosaPlugInfo)
 {
-    PCOSA_PLUGIN_INFO               pPlugInfo      = (PCOSA_PLUGIN_INFO)hCosaPlugInfo;
-
     return 0;
 }
 
@@ -1504,12 +1499,11 @@ void ANSC_EXPORT_API TELCOVOICEMGR_Unload(void)
 
 void ANSC_EXPORT_API COSA_MemoryCheck(void)
 {
-    ANSC_STATUS                     returnStatus            = ANSC_STATUS_SUCCESS;
     PCOSA_PLUGIN_INFO               pPlugInfo               = (PCOSA_PLUGIN_INFO)g_pTelcoVoiceBEManager->hCosaPluginInfo;
 
     /* unload the memory here */
 
-    returnStatus  =  TelcoVoiceMgr_BackEndManagerRemove(g_pTelcoVoiceBEManager);
+    TelcoVoiceMgr_BackEndManagerRemove(g_pTelcoVoiceBEManager);
     g_pTelcoVoiceBEManager = NULL;
 
     COSA_MemoryUsage();

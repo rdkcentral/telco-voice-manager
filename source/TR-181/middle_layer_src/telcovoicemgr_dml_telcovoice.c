@@ -99,20 +99,23 @@ X_RDK_TelcoVoice_GetParamStringValue
         ULONG*                      pUlSize
     )
 {
-    PTELCOVOICEMGR_DATAMODEL_TELCOVOICE       pMyObject     = (PTELCOVOICEMGR_DATAMODEL_TELCOVOICE)g_pTelcoVoiceBEManager->hTelcoVoice;
-
+    if(ParamName == NULL || pValue == NULL || pUlSize == NULL)
+    {
+        CcspTraceWarning(("%s: Invalid Input Parameter [NULL]\n", __func__));
+        return 1;
+    }
     if (strcmp(ParamName, "Data") == 0)
     {
         /* Data value should be empty for all get */
-        snprintf(pValue, pUlSize, "%s", "");
+        AnscCopyString(pValue,"");
         return 0;
     }
     if (strcmp(ParamName, "DatamodelVersion") == 0)
     {
 #ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
-        snprintf(pValue, pUlSize, "%s", "TR104V2");
+        AnscCopyString(pValue,"TR104V2");
 #else
-        snprintf(pValue, pUlSize, "%s", "TR104V1");
+        AnscCopyString(pValue,"TR104V1");
 #endif
         return 0;
     }
@@ -158,14 +161,12 @@ X_RDK_TelcoVoice_SetParamStringValue
         char*                       pString
     )
 {
-    PTELCOVOICEMGR_DATAMODEL_TELCOVOICE       pMyObject     = (PTELCOVOICEMGR_DATAMODEL_TELCOVOICE)g_pTelcoVoiceBEManager->hTelcoVoice;
-
     if (strcmp(ParamName, "Data") == 0)
     {
-        char *webConf = NULL;
-        int webSize = 0;
+        unsigned char *webConf = NULL;
+        ULONG webSize = 0;
 
-        webConf = AnscBase64Decode(pString, &webSize);
+        webConf = AnscBase64Decode((const PUCHAR)pString, &webSize);
 
         //Validate pointer
         if( NULL == webConf )

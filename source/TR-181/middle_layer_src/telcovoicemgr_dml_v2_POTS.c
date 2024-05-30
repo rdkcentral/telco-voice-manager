@@ -23,6 +23,7 @@
 #include "ccsp_trace.h"
 #include "ccsp_syslog.h"
 #include "telcovoicemgr_dml_hal_param_v2.h"
+#include "telcovoicemgr_dml_hal.h"
 
 #define HAL_DML_VOICESERVICE_POTS_FXO                          "Device.Services.VoiceService.%d.POTS.FXO.%d."
 #define HAL_DML_VOICESERVICE_POTS_FXS                          "Device.Services.VoiceService.%d.POTS.FXS.%d."

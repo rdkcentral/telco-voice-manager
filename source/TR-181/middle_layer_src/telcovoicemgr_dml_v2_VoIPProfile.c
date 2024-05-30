@@ -22,6 +22,9 @@
 #include "telcovoicemgr_dml_v2.h"
 #include "ccsp_trace.h"
 #include "ccsp_syslog.h"
+#include "telcovoicemgr_dml_hal.h"
+#include "telcovoicemgr_dml_json_cfg_init.h"
+#include "telcovoicemgr_services_apis_v2.h"
 
 /**********************************************************************
 
@@ -1437,7 +1440,7 @@ BOOL TelcoVoiceMgrDml_VoipProfileList_RTP_SetParamIntValue(ANSC_HANDLE hInsConte
             if (TelcoVoiceMgrDmlSetWanEthernetPriorityMark(RTP, iValue) != ANSC_STATUS_SUCCESS)
             {
                 CcspTraceInfo(("%s %d: Update Wanmgr: iValue[%d] Failed\n", __func__, __LINE__,iValue));
-                return ANSC_STATUS_DISCARD;
+                return FALSE;
             }
         }
         TELCOVOICEMGR_LOCK_OR_EXIT()

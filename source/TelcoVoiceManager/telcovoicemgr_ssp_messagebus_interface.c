@@ -139,8 +139,6 @@ ANSC_STATUS ssp_Mbi_MessageBusEngage(char *component_id, char *config_file, char
 
 int ssp_Mbi_Initialize(void *user_data)
 {
-    ANSC_STATUS             returnStatus    = ANSC_STATUS_SUCCESS;
-
     //return ( returnStatus == ANSC_STATUS_SUCCESS ) ? 0 : 1;
     return 0;
 }

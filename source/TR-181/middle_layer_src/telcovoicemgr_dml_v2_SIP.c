@@ -23,8 +23,10 @@
 #include "ccsp_trace.h"
 #include "ccsp_syslog.h"
 #include "telcovoicemgr_dml_hal_param_v2.h"
+#include "telcovoicemgr_services_apis_v2.h"
+#include "telcovoicemgr_dml_json_cfg_init.h"
+#include "telcovoicemgr_dml_hal.h"
 
-static char *bTrueStr = "true", *bFalseStr = "false";
 /**********************************************************************
 
     caller:     owner of this object
@@ -3921,7 +3923,7 @@ BOOL TelcoVoiceMgrDml_SIP_NetworkList_SetParamIntValue(ANSC_HANDLE hInsContext, 
             if (TelcoVoiceMgrDmlSetWanEthernetPriorityMark(SIP, iValue) != ANSC_STATUS_SUCCESS)
             {
                 CcspTraceInfo(("%s %d: Update Wanmgr: iValue[%d] Failed\n", __func__, __LINE__,iValue));
-                return ANSC_STATUS_DISCARD;
+                return FALSE;
             }
         }
         TELCOVOICEMGR_LOCK_OR_EXIT()
@@ -4188,7 +4190,7 @@ BOOL TelcoVoiceMgrDml_SIP_NetworkList_SetParamBoolValue(ANSC_HANDLE hInsContext,
     }
     else if (strcmp(ParamName, "Enable") == 0)
     {
-        snprintf(HalName, MAX_STR_LEN, "Device.Services.VoiceService.%d.SIP.Network.%d.Enable",uVsIndex,uNetworkIndex);
+        snprintf(HalName, MAX_STR_LEN, "Device.Services.VoiceService.%lu.SIP.Network.%lu.Enable",uVsIndex,uNetworkIndex);
 
         if (TelcoVoiceMgrHal_SetParamBool(HalName,bValue) == ANSC_STATUS_SUCCESS)
         {
@@ -6274,7 +6276,7 @@ BOOL TelcoVoiceMgrDml_SIP_NetworkList_RespMapList_SetParamStringValue(ANSC_HANDL
     {
         snprintf(HalName, MAX_STR_LEN, "Device.Services.VoiceService.%d.SIP.Network.%d.ResponseMap.%d.Tone",uVsIndex,uNetworkIndex,uRespMapIndex);
 
-        if (TelcoVoiceMgrHal_SetParamULong(HalName,pString) == ANSC_STATUS_SUCCESS)
+        if (TelcoVoiceMgrHal_SetParamString(HalName,pString) == ANSC_STATUS_SUCCESS)
         {
             TELCOVOICEMGR_LOCK_OR_EXIT()
 
@@ -6289,7 +6291,7 @@ BOOL TelcoVoiceMgrDml_SIP_NetworkList_RespMapList_SetParamStringValue(ANSC_HANDL
     {
         snprintf(HalName, MAX_STR_LEN, "Device.Services.VoiceService.%d.SIP.Network.%d.ResponseMap.%d.TextMessage",uVsIndex,uNetworkIndex,uRespMapIndex);
 
-        if (TelcoVoiceMgrHal_SetParamULong(HalName,pString) == ANSC_STATUS_SUCCESS)
+        if (TelcoVoiceMgrHal_SetParamString(HalName,pString) == ANSC_STATUS_SUCCESS)
         {
             TELCOVOICEMGR_LOCK_OR_EXIT()
 
@@ -7420,7 +7422,7 @@ ANSC_HANDLE TelcoVoiceMgrDml_SIP_RegistrarList_GetEntry(ANSC_HANDLE hInsContext,
     {
         if(nIndex < pRegistrarList->ulQuantity)
         {
-            PDML_SIP_PROXY_CTRL_T pRegistrarCtrl = pRegistrarList->pdata[nIndex];
+            PDML_SIP_REGISTRAR_CTRL_T pRegistrarCtrl = pRegistrarList->pdata[nIndex];
             if(pRegistrarCtrl != NULL)
             {
                *pInsNumber = nIndex + 1;
@@ -8446,7 +8448,7 @@ BOOL TelcoVoiceMgrDml_SIP_RegistrarList_AccountList_SetParamUlongValue(ANSC_HAND
 
     if(pHEAD != NULL)
     {
-        pDmlSipRegistrar = (PDML_SIP_NETWORK)pHEAD->pParentSipRegistrar;
+        pDmlSipRegistrar = (PDML_SIP_REGISTRAR)pHEAD->pParentSipRegistrar;
     }
 
     if(pDmlSipRegistrar != NULL)
@@ -8641,7 +8643,7 @@ BOOL TelcoVoiceMgrDml_SIP_RegistrarList_AccountList_SetParamStringValue(ANSC_HAN
 
     if(pHEAD != NULL)
     {
-        pDmlSipRegistrar = (PDML_SIP_NETWORK)pHEAD->pParentSipRegistrar;
+        pDmlSipRegistrar = (PDML_SIP_REGISTRAR)pHEAD->pParentSipRegistrar;
     }
 
     if(pDmlSipRegistrar != NULL)
@@ -8881,7 +8883,7 @@ BOOL TelcoVoiceMgrDml_SIP_RegistrarList_AccountList_SetParamBoolValue(ANSC_HANDL
 
     if(pHEAD != NULL)
     {
-        pDmlSipRegistrar = (PDML_SIP_NETWORK)pHEAD->pParentSipRegistrar;
+        pDmlSipRegistrar = (PDML_SIP_REGISTRAR)pHEAD->pParentSipRegistrar;
     }
 
     if(pDmlSipRegistrar != NULL)

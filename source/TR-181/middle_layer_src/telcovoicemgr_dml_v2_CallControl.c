@@ -23,8 +23,10 @@
 #include "ccsp_trace.h"
 #include "ccsp_syslog.h"
 #include "telcovoicemgr_dml_hal_param_v2.h"
+#include "telcovoicemgr_services_apis_v2.h"
+#include "telcovoicemgr_dml_hal.h"
+#include "telcovoicemgr_dml_json_cfg_init.h"
 
-static char *bTrueStr = "true", *bFalseStr = "false";
 /**********************************************************************
 
     caller:     owner of this object
@@ -782,7 +784,7 @@ BOOL TelcoVoiceMgrDml_CallControl_LineList_SetParamBoolValue(ANSC_HANDLE hInsCon
 
     if (strcmp(ParamName, "QuiescentMode") == 0)
     {
-        snprintf(HalName, MAX_STR_LEN, "Device.Services.VoiceService.%d.CallControl.Line.%d.QuiescentMode",uVsIndex,uLineIndex);
+        snprintf(HalName, MAX_STR_LEN, "Device.Services.VoiceService.%lu.CallControl.Line.%lu.QuiescentMode",uVsIndex,uLineIndex);
 
         if (TelcoVoiceMgrHal_SetParamBool(HalName,bValue) == ANSC_STATUS_SUCCESS)
         {
@@ -797,7 +799,7 @@ BOOL TelcoVoiceMgrDml_CallControl_LineList_SetParamBoolValue(ANSC_HANDLE hInsCon
     }
     else if (strcmp(ParamName, "Enable") == 0)
     {
-        snprintf(HalName, MAX_STR_LEN, "Device.Services.VoiceService.%d.CallControl.Line.%d.Enable",uVsIndex,uLineIndex);
+        snprintf(HalName, MAX_STR_LEN, "Device.Services.VoiceService.%lu.CallControl.Line.%lu.Enable",uVsIndex,uLineIndex);
 
         if (TelcoVoiceMgrHal_SetParamBool(HalName,bValue) == ANSC_STATUS_SUCCESS)
         {
@@ -8428,7 +8430,9 @@ BOOL TelcoVoiceMgrDml_CallControl_CallingFeatures_SetList_CFTList_SetParamString
     }
     else if (strcmp(ParamName, "Day") == 0)
     {
-        char enumValue[][STR_LEN_32]={"Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday","All"};
+        /* This implementaion is incomplete, commenting the below enum table for avoiding the compiler
+        warning. The implematation must be completed */ 
+        //char enumValue[][STR_LEN_32]={"Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday","All"};
 
         snprintf(HalName, MAX_STR_LEN, "Device.Services.VoiceService.%d.CallControl.CallingFeatures.Set.%d.CFT.%d.Day",uVsIndex,uSetIndex,uCFTIndex);
 

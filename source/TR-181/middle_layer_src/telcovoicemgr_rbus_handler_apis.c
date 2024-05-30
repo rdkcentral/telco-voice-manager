@@ -44,23 +44,6 @@ char componentName[32] = "TELCOVOICEMANAGER";
   Data Elements declaration:
 
  ***********************************************************************/
-ANSC_STATUS TelcoVoiceMgr_Rbus_String_getParamValue (char * param, char * value)
-{
-    if ((param == NULL) || (value == NULL))
-    {
-        CcspTraceError(("%s %d: invalid args\n", __FUNCTION__, __LINE__));
-        return ANSC_STATUS_FAILURE;
-    }
-
-    if (rbus_getStr(rbusHandle, param, value) != RBUS_ERROR_SUCCESS)
-    {
-        CcspTraceError(("%s %d: unbale to get value of param %s\n", __FUNCTION__, __LINE__, param));
-        return ANSC_STATUS_FAILURE;
-    }
-
-    return ANSC_STATUS_SUCCESS;
-}
-
 static void TelcoVoiceMgr_Rbus_EventReceiveHandler(rbusHandle_t handle, rbusEvent_t const* event, rbusEventSubscription_t* subscription)
 {
     (void)handle;
@@ -68,7 +51,7 @@ static void TelcoVoiceMgr_Rbus_EventReceiveHandler(rbusHandle_t handle, rbusEven
 
     const char* eventName = event->name;
     rbusValue_t valBuff = rbusObject_GetValue(event->data, NULL );
-    static bool prevLineEnableValue = FALSE;
+    static BOOL prevLineEnableValue = FALSE;
     static char prevWanInterface[BUF_LEN_256] = {0};
 
     if((valBuff == NULL) || (eventName == NULL))

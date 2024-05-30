@@ -1237,5 +1237,7 @@ ANSC_STATUS TelcoVoiceMgrDmlSetBoundIpAddress(uint32_t uiService, char *BoundIpA
 ANSC_STATUS TelcoVoiceMgrDmlGetEthernetPriorityMark(uint32_t uiService, uint32_t uiProfile, PROTOCOL_TYPE protocol, int* pValue);
 ANSC_STATUS TelcoVoiceMgrSetSyseventData(char *eventName, char *eventValue);
 ANSC_STATUS TelcoVoiceMgrDmlSetX_RDK_FirewallRuleData(char * FirewallRuleData, ULONG uVsIndex, ULONG uVpQuantity);
-
+ANSC_STATUS TelcoVoiceMgrDmlGetVoiceProcessStatus(uint32_t uiService,TELCOVOICEMGR_VOICE_STATUS_ENUM *pvoice_status);
+ANSC_STATUS TelcoVoiceMgrDmlSetWanEthernetPriorityMark(PROTOCOL_TYPE protocol, int32_t iValue);
+ANSC_STATUS TelcoVoiceMgrDmlGetWanEthernetPriorityMark(PROTOCOL_TYPE protocol, int32_t *iValue);
 #endif /* _TELCOVOICEMGR_SERVICES_APIS_H */

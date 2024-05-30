@@ -35,6 +35,7 @@
 
 #ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
 #include "telcovoicemgr_services_apis_v2.h"
+#include "telcovoicemgr_dml_v2.h"
 #else
 #include "telcovoicemgr_services_apis_v1.h"
 #endif //FEATURE_RDKB_VOICE_DM_TR104_V2
@@ -107,17 +108,13 @@ pErr TelcoVoiceMgr_Process_Webconfig_Request(void *Data)
     for( i = 0; i < pWebConfig->ServiceCount; i++ )
     {
         WebConfig_VoiceServiceTable_t *pServiceCfg = &(pWebConfig->pstServiceInfo[i]);
-        TELCOVOICEMGR_DML_DATA        *pTelcoVoiceMgrDmlData = NULL;
 
         DML_VOICE_SERVICE_CTRL_T      *pTelcoVoiceSrvCtrl    = NULL;
         TELCOVOICEMGR_DML_VOICESERVICE *pVoiceService        = NULL;
 #ifndef FEATURE_RDKB_VOICE_DM_TR104_V2
         DML_PROFILE_CTRL_T             *pTelcoVoiceProfCtrl  = NULL;
         TELCOVOICEMGR_DML_VOICEPROFILE *pVoiceProfile        = NULL;
-#else
-        PDML_VOIPPROFILE                  pDmlVoiceProfile   = NULL;
-        PDML_SIP                          pDmlSipObj         = NULL;
-        PDML_SIP_NETWORK                  pDmlSipNetwork     = NULL;
+        TELCOVOICEMGR_DML_DATA        *pTelcoVoiceMgrDmlData = NULL;
 #endif
 
         //Index Assignment
@@ -815,7 +812,7 @@ pErr TelcoVoiceMgr_Process_Webconfig_Request(void *Data)
             uFXSIndex = pstPOTSFxsCfg->uiFXSInstanceNumber;
 
             //Get Voice Sip Network DML structure
-            pPOTSFxsCtrl = (DML_VOICESERVICE_TERMINAL_CTRL_T*) TelcoVoiceMgrDml_POTS_FXSList_GetEntry(pTelcoVoiceSrvCtrl, (uFXSIndex - 1), &ulInstance);
+            pPOTSFxsCtrl = (PDML_POTS_FXS_CTRL_T) TelcoVoiceMgrDml_POTS_FXSList_GetEntry(pTelcoVoiceSrvCtrl, (uFXSIndex - 1), &ulInstance);
 
             if( NULL == pPOTSFxsCtrl )
             {
@@ -1177,7 +1174,6 @@ unsigned int getTelcoVoiceDataBlobVersion(char *pSubDoc)
 {
     char  subdoc_ver[BUFFER_LENGTH_64] = {0},
           buf[BUFFER_LENGTH_64]        = {0};
-    int retval;
     unsigned int version = 0;
 
     //Get blob version from DB

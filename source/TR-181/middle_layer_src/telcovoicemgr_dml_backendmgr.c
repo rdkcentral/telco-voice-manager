@@ -113,7 +113,6 @@ COSARepopulateTableProc            g_COSARepopulateTable;
 
 ANSC_HANDLE TelcoVoiceMgr_BackEndManagerCreate(VOID)
 {
-    ANSC_STATUS                     returnStatus = ANSC_STATUS_SUCCESS;
     PCOSA_BACKEND_MANAGER_OBJECT    pMyObject    = (PCOSA_BACKEND_MANAGER_OBJECT)NULL;
 
     /*

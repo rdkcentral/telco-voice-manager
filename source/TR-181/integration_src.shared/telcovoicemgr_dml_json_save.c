@@ -193,25 +193,27 @@ S_PROFILE [ any ] -> LEAF
 #define VOICE_HAL_NUM_ELEMS(x) (sizeof(x)/sizeof(x[0]))
 
 int saveCurrentFile(cJSON *obj);
+#ifndef FEATURE_RDKB_VOICE_DM_TR104_V2
+uint32_t replaceLeafValue(cJSON *pNode, char *pLeafName, PVOICE_HAL_SAVE_PARAMS pParam);
 int storeOneLine(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_PARAMS pParam);
 int storeAllLines(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_PARAMS pParam);
 int storeOneVoiceProfile(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_PARAMS pParam);
 int storeAllVoiceProfiles(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_PARAMS pParam);
 int storeOneVoiceService(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_PARAMS pParam);
 int storeAllVoiceServices(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_PARAMS pParam);
-
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
+#else
 /* TR104V2 functionalities */
 OBJECT_TYPE getNextObjType(char *fullName);
 cJSON* get_array_item_by_uid(const cJSON *array, uint32_t uid);
 int updateVoiceServicesCfg(char *fullName,cJSON **config, PVOICE_HAL_SAVE_TYPE_AND_PARAMS pParam);
 int deleteVoiceServicesCfg(char *fullName,cJSON **config);
-#endif
-
-#ifndef FEATURE_RDKB_VOICE_DM_TR104_V2
-uint32_t replaceLeafValue(cJSON *pNode, char *pLeafName, PVOICE_HAL_SAVE_PARAMS pParam);
-#else
 uint32_t replaceLeafValue(cJSON *pNode, char *pLeafName, PVOICE_HAL_SAVE_TYPE_AND_PARAMS pParam);
+int storeOneLine(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_TYPE_AND_PARAMS pParam);
+int storeAllLines(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_TYPE_AND_PARAMS pParam);
+int storeOneVoiceProfile(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_TYPE_AND_PARAMS pParam);
+int storeAllVoiceProfiles(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_TYPE_AND_PARAMS pParam);
+int storeOneVoiceService(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_TYPE_AND_PARAMS pParam);
+int storeAllVoiceServices(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_TYPE_AND_PARAMS pParam);
 #endif
 /***********************************
  * These functions are called by voice_hal_setXxxx()
@@ -689,8 +691,8 @@ int deleteVoiceServicesCfg(char *fullName,cJSON **config)
  */
 uint32_t deleteObject(char *fullName)
 {
-    cJSON *config = NULL, *currObj = NULL;
-    uint32_t currentDMSize, i, entry, readBytes, objLen; void* pJsonConfig = NULL; FILE* fp;
+    cJSON *config = NULL;
+    uint32_t currentDMSize, readBytes; void* pJsonConfig = NULL; FILE* fp;
 
     //   cmsLog_debug("%s:%s \n", __FILE__, __FUNCTION__);
     /* Initialise the cJSON parser with the 'current' set of voice data
@@ -784,10 +786,15 @@ uint32_t storeObject(char *fullName,PVOICE_HAL_SAVE_TYPE_AND_PARAMS pParam)
 uint32_t storeObject(char *nName, uint32_t vs,  uint32_t vp, uint32_t li,  uint32_t pi, PVOICE_HAL_SAVE_PARAMS pParam)
 #endif
 {
-    cJSON *config = NULL, *currObj = NULL;
-    uint32_t currentDMSize, i, entry, readBytes, objLen; void* pJsonConfig = NULL; FILE* fp;
-    char *pParse = NULL, *pNickName = NULL;
+    cJSON *config = NULL;
+    uint32_t currentDMSize, readBytes; void* pJsonConfig = NULL; FILE* fp;
+    char *pParse = NULL;
+#ifndef FEATURE_RDKB_VOICE_DM_TR104_V2
+    uint32_t i, entry, objLen;
+    char *pNickName = NULL;
     enum OBJ_TYPE objType;
+    cJSON  *currObj = NULL;
+#endif
 //   cmsLog_debug("%s:%s \n", __FILE__, __FUNCTION__);
     /* Initialise the cJSON parser with the 'current' set of voice data 
      * Find the size of file, allocate memory, read it, parse it.
@@ -1009,7 +1016,11 @@ enum _TT getTextType(char *text)
     }
     return TT_UNKNOWN;
 }
+#ifndef FEATURE_RDKB_VOICE_DM_TR104_V2
 int storeAllVoiceServices(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_PARAMS pParam)
+#else
+int storeAllVoiceServices(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_TYPE_AND_PARAMS pParam)
+#endif
 {
     int numVoiceServices;
 
@@ -1038,7 +1049,11 @@ int storeAllVoiceServices(char *pParse, char *pNickName, int entry, cJSON *jsonO
     }
     return 0;
 }
+#ifndef FEATURE_RDKB_VOICE_DM_TR104_V2
 int storeOneVoiceService(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_PARAMS pParam)
+#else
+int storeOneVoiceService(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_TYPE_AND_PARAMS pParam)
+#endif
 {
     enum OBJ_TYPE objType; uint32_t objLen; cJSON *leafObj = NULL;
 
@@ -1169,7 +1184,11 @@ int storeOneVoiceService(char *pParse, char *pNickName, int entry, cJSON *jsonOb
     CcspTraceInfo(("Unreachable code reached !!!\n"));
     return (-1); 
 }
+#ifndef FEATURE_RDKB_VOICE_DM_TR104_V2
 int storeAllVoiceProfiles(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_PARAMS pParam)
+#else
+int storeAllVoiceProfiles(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_TYPE_AND_PARAMS pParam)
+#endif
 {
     int numVoiceProfiles;
 
@@ -1202,7 +1221,11 @@ int storeAllVoiceProfiles(char *pParse, char *pNickName, int entry, cJSON *jsonO
     CcspTraceInfo(("Unreachable code reached !!\n"));
     return (-1);
 }
+#ifndef FEATURE_RDKB_VOICE_DM_TR104_V2
 int storeOneVoiceProfile(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_PARAMS pParam)
+#else
+int storeOneVoiceProfile(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_TYPE_AND_PARAMS pParam)
+#endif
 {
     enum OBJ_TYPE objType; uint32_t objLen;
     
@@ -1285,7 +1308,11 @@ int storeOneVoiceProfile(char *pParse, char *pNickName, int entry, cJSON *jsonOb
     CcspTraceInfo(("Unreachable code reached !!\n"));
     return (-1);
 }
+#ifndef FEATURE_RDKB_VOICE_DM_TR104_V2
 int storeAllLines(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_PARAMS pParam)
+#else
+int storeAllLines(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_TYPE_AND_PARAMS pParam)
+#endif
 {
     int numLines; cJSON *lineObj = NULL;
 
@@ -1327,7 +1354,11 @@ int storeAllLines(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOI
     CcspTraceInfo(("Unreachable code reached !!\n"));
     return (-1);
 }
+#ifndef FEATURE_RDKB_VOICE_DM_TR104_V2
 int storeOneLine(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_PARAMS pParam)
+#else
+int storeOneLine(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOICE_HAL_SAVE_TYPE_AND_PARAMS pParam)
+#endif
 {
     enum OBJ_TYPE objType; uint32_t objLen; cJSON *leafObj = NULL;
     
@@ -1417,8 +1448,13 @@ int storeOneLine(char *pParse, char *pNickName, int entry, cJSON *jsonObj, PVOIC
             }
             if (cJSON_IsNumber(leafObj))
             {
+#ifndef FEATURE_RDKB_VOICE_DM_TR104_V2
                 CcspTraceInfo(("SetNumberValue %d\n", pParam->integer));
                 cJSON_SetNumberValue(leafObj, pParam->integer);
+#else
+                CcspTraceInfo(("SetNumberValue %d\n", pParam->param.integer));
+                cJSON_SetNumberValue(leafObj, pParam->param.integer);
+#endif
                 /* Update the number value with the string param */;
                 return 0;
             }

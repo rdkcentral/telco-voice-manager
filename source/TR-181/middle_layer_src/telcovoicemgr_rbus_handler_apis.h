@@ -47,6 +47,7 @@ ANSC_STATUS TelcoVoiceMgr_Rbus_Init();
 ANSC_STATUS TelcoVoiceMgr_Rbus_Exit();
 void TelcoVoiceMgr_Rbus_SubscribeDML(void);
 void TelcoVoiceMgr_Rbus_UnSubscribeDML(void);
+ANSC_STATUS TelcoVoiceMgr_RbusExit();
 #endif // RBUS_BUILD_FLAG_ENABLE _HUB4_PRODUCT_REQ_
 
 #ifdef _HUB4_PRODUCT_REQ_

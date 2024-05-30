@@ -905,6 +905,7 @@
         { "$ref": "#/definitions/voiceServiceX_RDK_BoundIfName" },
         { "$ref": "#/definitions/voiceServiceX_RDK_IpAddressFamily" },
         { "$ref": "#/definitions/voiceServiceX_RDK_Enable" },
+        { "$ref": "#/definitions/voiceServiceX_RDK_TimeOffset" },
         { "$ref": "#/definitions/voiceServiceX_RDK_FactoryReset" },
         { "$ref": "#/definitions/voiceServiceX_RDK_DnsServers" },
         { "$ref": "#/definitions/voiceServiceX_RDK_Debug" },
@@ -1884,6 +1885,24 @@
         },
         "value": { "$ref": "#/definitions/voiceStatusEnumList" }
       }
+    },
+    "voiceServiceX_RDK_TimeOffset": {
+        "description": "Time zone based time offset.(Access = Read-Write)",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^Device\\.Services\\.VoiceService\\.\\d+\\.X_RDK_TimeOffset$"
+          },
+          "type": {
+            "type": "string",
+            "const": "string"
+          },
+          "value": {
+            "type": "integer"
+          }
+        }
     },
     "voiceServiceX_RDK_FactoryReset": {
       "description": "Factory Reset voice.(Access = Read-Write)",

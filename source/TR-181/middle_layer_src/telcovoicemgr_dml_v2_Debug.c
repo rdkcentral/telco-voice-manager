@@ -20,6 +20,7 @@
 #include "ansc_platform.h"
 #include "ansc_string_util.h"
 #include "telcovoicemgr_dml_backendmgr.h"
+#include "telcovoicemgr_services_apis_v2.h"
 #include "telcovoicemgr_dml_v2.h"
 #include "ccsp_trace.h"
 #include "ccsp_syslog.h"

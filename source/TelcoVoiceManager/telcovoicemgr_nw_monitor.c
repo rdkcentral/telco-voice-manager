@@ -63,10 +63,12 @@
 #define SYSEVENT_LAN_ADDRESS "current_lan_ipaddr"
 #define SYSEVENT_FIREWALL_STATUS "firewall-status"
 #define SYSEVENT_FIREWALL_RESTART "firewall-restart"
+#define SYSEVENT_IPV4_TIME_OFFSET "ipv4-timeoffset"
 #define IP_ADDR_FAMILY_LENGTH 32
 #define BOUND_IF_NAME_LENGTH 256
 
 #ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
+#include "telcovoicemgr_services_apis_v2.h"
 // V2 Functionality to update SKB Mark
 #define SIP_INDEX TELCOVOICEMGR_DML_NUMBER_OF_SIP_NETWORK
 #define RTP_INDEX TELCOVOICEMGR_DML_NUMBER_OF_VOIP_PROFILE
@@ -98,7 +100,6 @@ static token_t sysevent_token = -1;
 static int sysevent_listen_notfiy_fd = -1;
 static token_t sysevent_notify_token = -1;
 static char ipAddrFamily[IP_ADDR_FAMILY_LENGTH] = {0};
-static char lanIpAddr[IP_ADDR_FAMILY_LENGTH] = {0};
 static char boundIfName[BOUND_IF_NAME_LENGTH] = {0};
 static int firewall_status = FIREWALLSTATUS_STARTING;
 
@@ -111,8 +112,6 @@ static void *voice_manager_nw_monitor(void *data);
 
 void voicemgr_create_nw_monitor()
 {
-    int length = BOUND_IF_NAME_LENGTH;
-
     PTELCOVOICEMGR_DML_VOICESERVICE       pDmlVoiceService    = NULL;
 
     TELCOVOICEMGR_DML_DATA* pTelcoVoiceMgrDmlData = TelcoVoiceMgrDmlGetDataLocked();
@@ -199,6 +198,7 @@ static void *voice_manager_nw_monitor(void *data)
     async_id_t ipv6_connection_asyncid;
     async_id_t lan_connection_asyncid;
     async_id_t firewallstatus_asyncid;
+    async_id_t ipv4_timeoffset_asyncid;
 
     /*LAN Events*/
     sysevent_set_options(sysevent_listen_notfiy_fd, sysevent_notify_token, SYSEVENT_LAN_STATUS, TUPLE_FLAG_EVENT);
@@ -209,6 +209,8 @@ static void *voice_manager_nw_monitor(void *data)
     sysevent_setnotification(sysevent_listen_notfiy_fd, sysevent_notify_token, SYSEVENT_IPV4_CONNECTION_STATE,  &ipv4_connection_asyncid);
     sysevent_set_options(sysevent_listen_notfiy_fd, sysevent_notify_token, SYSEVENT_IPV6_CONNECTION_STATE, TUPLE_FLAG_EVENT);
     sysevent_setnotification(sysevent_listen_notfiy_fd, sysevent_notify_token, SYSEVENT_IPV6_CONNECTION_STATE,  &ipv6_connection_asyncid);
+    sysevent_set_options(sysevent_listen_notfiy_fd, sysevent_notify_token, SYSEVENT_IPV4_TIME_OFFSET, TUPLE_FLAG_EVENT);
+    sysevent_setnotification(sysevent_listen_notfiy_fd, sysevent_notify_token, SYSEVENT_IPV4_TIME_OFFSET,  &ipv4_timeoffset_asyncid);
 
     /*TELCO VOICE MANAGER Events*/
     sysevent_set_options(sysevent_listen_notfiy_fd, sysevent_notify_token, SYSEVENT_UPDATE_IFNAME, TUPLE_FLAG_EVENT);
@@ -225,7 +227,7 @@ static void *voice_manager_nw_monitor(void *data)
     while(1)
     {
         async_id_t getnotification_asyncid;
-        unsigned char name[32] = {0}, val[40] = {0};
+        char name[32] = {0}, val[40] = {0};
         int namelen = sizeof(name);
         int vallen  = sizeof(val);
 
@@ -249,6 +251,9 @@ static void *voice_manager_nw_monitor(void *data)
 
 static void voice_event_handler(char *pEvtName, char *pEvtValue)
 {
+#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
+    time_t tOffset = 0;
+#endif
     CcspTraceWarning(("voice_event_handler => Evt Name : %s , Value : %s , IfName : %s, Family : %s\n", pEvtName, pEvtValue, boundIfName, ipAddrFamily));
     if (!strcmp(pEvtName, SYSEVENT_UPDATE_IFNAME))
     {
@@ -321,6 +326,13 @@ static void voice_event_handler(char *pEvtName, char *pEvtValue)
             firewall_status = FIREWALLSTATUS_STARTING;
         }
     }
+#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
+    else if ( !strcmp(pEvtName, SYSEVENT_IPV4_TIME_OFFSET) )
+    {
+        tOffset = atoi(pEvtValue + 1);                    /* Skip first character '@' */
+        TelcoVoiceMgrDmlSetTimeOffset(1, tOffset);
+    }
+#endif
 
 }
 

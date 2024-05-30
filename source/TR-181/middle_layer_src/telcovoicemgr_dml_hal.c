@@ -27,8 +27,10 @@
 #include "json_hal_client.h"
 #include "ansc_platform.h"
 #include "telcovoicemgr_dml_hal.h"
+#include "telcovoicemgr_dml_json_cfg_init.h"
 #ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
 #include "telcovoicemgr_services_apis_v2.h"
+#include "telcovoicemgr_dml_hal_param_v2.h"
 #else
 #include "telcovoicemgr_services_apis_v1.h"
 #endif
@@ -137,11 +139,9 @@ static json_object *create_json_request_message(eActionType request_type, const 
     CcspTraceInfo(("%s - %d [VAV] Enter \n", __FUNCTION__, __LINE__));
 
     json_object *jrequest = NULL;
-    json_object *jparam_arr = NULL;
-    json_object *jparam_obj = NULL;
     hal_param_t stParam;
     memset(&stParam, 0, sizeof(stParam));
-    json_bool val;
+
     switch (request_type)
     {
         case SET_REQUEST_MESSAGE:
@@ -181,6 +181,9 @@ static json_object *create_json_request_message(eActionType request_type, const 
                 return NULL;
             }
             break;
+        default:
+            CcspTraceError(("[%s][%d] json_hal_add_param failed, request type not supported\n", __FUNCTION__, __LINE__));
+            return NULL;
     }
     return jrequest;
 }
@@ -320,7 +323,6 @@ ANSC_STATUS TelcoVoiceHal_GetCallLogStats(const char *param_name, TELCOVOICEMGR_
 }
 static ANSC_STATUS get_call_log_stats(const json_object *reply_msg, TELCOVOICEMGR_DML_VOICESERVICE_CALLLOG_STATS *stCallLogStats)
 {
-    ANSC_STATUS rc = ANSC_STATUS_SUCCESS;
     int total_param_count = 0;
 
     total_param_count = json_hal_get_total_param_count(reply_msg);
@@ -331,7 +333,7 @@ static ANSC_STATUS get_call_log_stats(const json_object *reply_msg, TELCOVOICEMG
      */
     for (int i = 0; i < total_param_count; ++i)
     {
-        if (json_hal_get_param(reply_msg, i, GET_RESPONSE_MESSAGE, &resp_param) != RETURN_OK)
+        if (json_hal_get_param((json_object *)reply_msg, i, GET_RESPONSE_MESSAGE, &resp_param) != RETURN_OK)
         {
             CcspTraceError(("%s - %d Failed to get the param from response message [index = %d] \n", __FUNCTION__, __LINE__, i));
             continue;
@@ -381,7 +383,6 @@ static ANSC_STATUS get_call_log_stats(const json_object *reply_msg, TELCOVOICEMG
 
 static ANSC_STATUS get_voice_line_stats(const json_object *reply_msg, TELCOVOICEMGR_DML_VOICESERVICE_STATS *stVoiceStats)
 {
-    ANSC_STATUS rc = ANSC_STATUS_SUCCESS;
     int total_param_count = 0;
 
     total_param_count = json_hal_get_total_param_count(reply_msg);
@@ -392,7 +393,7 @@ static ANSC_STATUS get_voice_line_stats(const json_object *reply_msg, TELCOVOICE
      */
     for (int i = 0; i < total_param_count; ++i)
     {
-        if (json_hal_get_param(reply_msg, i, GET_RESPONSE_MESSAGE, &resp_param) != RETURN_OK)
+        if (json_hal_get_param((json_object *)reply_msg, i, GET_RESPONSE_MESSAGE, &resp_param) != RETURN_OK)
         {
             CcspTraceError(("%s - %d Failed to get the param from response message [index = %d] \n", __FUNCTION__, __LINE__, i));
             continue;
@@ -1275,8 +1276,6 @@ void eventcb_FirewallRuleData(const char *msg, const int len)
     char event_name[256] = {'\0'};
     char event_val[256] = {'\0'};
     int  uVsIndex            = 0;
-    int  uVpIndex            = 0;
-    int  uIndex              = 0;
     int  uVpQuantity         = 0;
     char FirewallRuleBuffer[BUF_LEN_1024] = {'\0'};
     PTELCOVOICEMGR_DML_VOICESERVICE       pDmlVoiceService    = NULL;
@@ -1309,7 +1308,7 @@ void eventcb_FirewallRuleData(const char *msg, const int len)
                     //create new VoiceService
                     TelcoVoiceMgrDmlAddVoiceService(&(pTelcoVoiceMgrData->Service.VoiceService), uVsIndex - 1);
 
-                    pDmlVoiceService = pTelcoVoiceMgrData->Service.VoiceService.pdata[uVsIndex - 1];
+                    pDmlVoiceService = &(pTelcoVoiceMgrData->Service.VoiceService.pdata[uVsIndex - 1]->dml);
                     if(pDmlVoiceService == NULL)
                     {
                         TelcoVoiceMgrDmlGetDataRelease(pTelcoVoiceMgrData);
@@ -1324,7 +1323,7 @@ void eventcb_FirewallRuleData(const char *msg, const int len)
                 uVpQuantity = pDmlVoiceService->VoiceProfileList.ulQuantity;
 #endif
                 TelcoVoiceMgrDmlGetDataRelease(pTelcoVoiceMgrData);
-                ret =  TelcoVoiceMgrDmlSetX_RDK_FirewallRuleData(&FirewallRuleBuffer, uVsIndex, uVpQuantity);
+                ret =  TelcoVoiceMgrDmlSetX_RDK_FirewallRuleData(FirewallRuleBuffer, uVsIndex, uVpQuantity);
                 if(ret == ANSC_STATUS_SUCCESS)
                 {
                     CcspTraceDebug(("[%s: %d] Sysevent set for firewall rules success\n", __FUNCTION__, __LINE__));
@@ -1358,7 +1357,7 @@ TelcoVoiceMgrHal_AddCallCtrlOutMap
 {
     ANSC_HANDLE                     returnEntry      = NULL;
     PDML_CALLCONTROL_OUTGOINGMAP_LIST_T    pCallCtrlOutMapList         = (PDML_CALLCONTROL_OUTGOINGMAP_LIST_T)CallCtrlOutMapList;
-    PTELCOVOICEMGR_DML_VOICESERVICE pDmlVoiceService  = (PDML_CALLCONTROL_OUTGOINGMAP_LIST_T)pVoiceService;
+    PTELCOVOICEMGR_DML_VOICESERVICE pDmlVoiceService  = (PTELCOVOICEMGR_DML_VOICESERVICE)pVoiceService;
     PDML_CALLCONTROL_OUTGOINGMAP_CTRL_T pCallCtrlOutMapCtrl         = NULL;
 
 
@@ -1466,7 +1465,7 @@ TelcoVoiceMgrHal_AddCallCtrlNumberingPlan
 {
         ANSC_HANDLE                     returnEntry      = NULL;
     PDML_CALLCONTROL_NUMBERINGPLAN_LIST_T    pCallCtrlNumPlanList         = (PDML_CALLCONTROL_NUMBERINGPLAN_LIST_T)CallCtrlNumPlanList;
-    PTELCOVOICEMGR_DML_VOICESERVICE pDmlVoiceService  = (PDML_CALLCONTROL_NUMBERINGPLAN_LIST_T)pVoiceService;
+    PTELCOVOICEMGR_DML_VOICESERVICE pDmlVoiceService  = (PTELCOVOICEMGR_DML_VOICESERVICE)pVoiceService;
     PDML_CALLCONTROL_NUMBERINGPLAN_CTRL_T       pCallCtrlNumPlanCtrl         = NULL;
 
 

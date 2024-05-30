@@ -45,34 +45,43 @@
 #include "telcovoicemgr_services_apis_v1.h"
 #endif
 #include "telcovoicemgr_dml_hal.h"
+#include <syscfg.h>
 
 #define VOICE_HAL_NORMAL_DIGIT_MAP  "DigitMap"
 #define VOICE_HAL_EMERGENCY_DIGIT_MAP  "X_RDK-Central_COM_EmergencyDigitMap"
 #define VOICE_HAL_CUSTOM_DIGIT_MAP  "X_RDK-Central_COM_DigitMap"
 
-
 /* Forward declarations */
+#ifndef FEATURE_RDKB_VOICE_DM_TR104_V2
 static void jsonParseVoiceService(uint32_t index, cJSON *voiceService);
-static void jsonParseAllPhyInterfaces(uint32_t voiceService, cJSON *phyInterfaces);
 static void jsonParseAllVoiceProfiles(uint32_t voiceService, cJSON *voiceProfiles);
-static void jsonParseX_RDK_Debug(uint32_t service, cJSON *X_RDK_DebugObj);
 static void jsonParseOnePhyInterface(uint32_t service, uint32_t index, cJSON *phyInterface);
+static void jsonParseX_RDK_Debug(uint32_t service, cJSON *X_RDK_DebugObj);
 static void jsonParseOneVoiceProfile(uint32_t service, uint32_t index, cJSON *voiceProfile);
+static void jsonParseAllPhyInterfaces(uint32_t voiceService, cJSON *phyInterfaces);
 static int32_t jsonParseAllLines(uint32_t service, uint32_t profile, cJSON *lines);
 static void jsonParseOneLine(uint32_t service, uint32_t profile, uint32_t line, cJSON *vLine);
 static void jsonParseLineSIP(uint32_t service, uint32_t profile, uint32_t line, cJSON *vp);
 static int32_t jsonParseProfileSIP(uint32_t service, uint32_t profile, cJSON *ps);
 static int32_t jsonParseProfileRTP(uint32_t service, uint32_t profile, cJSON *ps);
-
-static void jsonCfgDoCallingFeature(uint32_t service, uint32_t profile, uint32_t line, cJSON *lineObj);
-static void jsonCfgDooVoiceProcessing(uint32_t service, uint32_t profile, uint32_t line, cJSON *lineObj);
 static int32_t jsonCfgSetLineEnable(uint32_t service, uint32_t profile, uint32_t line, char* buffer);
+static ANSC_STATUS initialise_line_calling_features(uint32_t uiService, uint32_t uiProfile, uint32_t uiLine, TELCOVOICEMGR_VOICE_CALL_FEATURE_TYPE_ENUM eFeature, BOOL bStatus);
 static void jsonCfgDoVoiceProcessing(uint32_t service, uint32_t profile, uint32_t line, cJSON *lineObj);
+#endif
 
 static void fcopy(char *src, char *dst);
 
 static int32_t voiceHalInitDmDefaults(void);
-static ANSC_STATUS initialise_line_calling_features(uint32_t uiService, uint32_t uiProfile, uint32_t uiLine, TELCOVOICEMGR_VOICE_CALL_FEATURE_TYPE_ENUM eFeature, BOOL bStatus);
+int platform_hal_GetRouterRegion(char *pValue);
+static int32_t jsonCfgSetAuthCredentials
+    (
+        uint32_t                service,
+        uint32_t                profile,
+        uint32_t                line,
+        TELCOVOICEMGR_VOICE_CREDENTIAL_TYPE_ENUM   eAuthCredential,
+        char*                   value
+    );
+
 
 static json_object *jInitMsg = NULL;
 static hal_param_t initParam;
@@ -254,7 +263,7 @@ int32_t verifyChecksumFile(const uint8_t *pcbuf, uint32_t confSize)
 static struct
 {
     char *obj;
-    int32_t (*func) (char* /*path */, cJSON * /*value*/);
+    ANSC_STATUS (*func) (char* /*path */, cJSON * /*value*/);
 } hookFuncs[] =
 {
     { "X_RDK_BoundIfName", jsonCfgSysEventSetVoiceToken },
@@ -332,7 +341,7 @@ static ANSC_STATUS jsonCfgSysEventSetVoiceToken(char *fullName,cJSON *item)
 
     CcspTraceInfo(("Voice config Set Sysevent update  %s \n", item->string));
 
-    if (TelcoVoiceMgrSetSyseventData(eventName, item->valuestring)==ANSC_STATUS_FAILURE)
+    if (TelcoVoiceMgrSetSyseventData(eventName, (char *)item->valuestring)==ANSC_STATUS_FAILURE)
     {
         CcspTraceWarning(("%s :: sysevent_set Failed\n", __FUNCTION__));
     }
@@ -371,7 +380,7 @@ static ANSC_STATUS jsonCfgSetInitMark(char *fullName,cJSON *item)
 {
     int service=0;
     int profile=0;
-    PROTOCOL_TYPE protocol;
+    PROTOCOL_TYPE protocol = SIP;
 
     if(fullName == NULL)
     {
@@ -487,13 +496,11 @@ static ANSC_STATUS jsonCfgSet(cJSON *item, char *fullName)
 {
     hal_param_t initParam;
     memset(&initParam, 0, sizeof(initParam));
-    ANSC_STATUS rc = ANSC_STATUS_FAILURE;
 
     if(cJSON_IsNull(item)|| cJSON_IsInvalid(item) || (fullName == NULL))
     {
         AnscTraceError(("%s:%d:: Invalid item \n", __FUNCTION__, __LINE__));
         return ANSC_STATUS_FAILURE;
-
     }
     if(strcmp(item->string,"@uid")==0)
     {
@@ -626,8 +633,12 @@ void parseAndSetJsonCfg(cJSON *item,char*prefix)
 */
 static int32_t voiceHalInitDmDefaults()
 {
-    cJSON *config = NULL, *services = NULL, *voiceService = NULL;
-    uint32_t numVoiceServices, defaultDMSize, i, readBytes; void* pJsonConfig = NULL; FILE* fp;
+#ifndef FEATURE_RDKB_VOICE_DM_TR104_V2
+    cJSON  *voiceService = NULL;
+    uint32_t  i, numVoiceServices;
+#endif
+    cJSON *config = NULL, *services = NULL;
+    uint32_t defaultDMSize, readBytes; void* pJsonConfig = NULL; FILE* fp;
     int ret = 0;
 
     CcspTraceInfo(("%s:%s \n", __FILE__, __FUNCTION__));
@@ -761,6 +772,9 @@ static int32_t voiceHalInitDmDefaults()
     return 0;
 }
 
+#define VOICE_HAL_NUM_ELEMS(x) (sizeof(x)/sizeof(x[0]))
+
+#ifndef FEATURE_RDKB_VOICE_DM_TR104_V2
 /* This structure makes the connection between VoiceService
  * JSON objects and the voice_hal functions that set them */
 
@@ -814,12 +828,7 @@ static int32_t jsonCfgSetTestState(uint32_t service, uint32_t phy_interface, cha
 {
     fprintf(stderr,"\n%s(%d) - service[%d], phy_interface[%d], value[%s]", __func__, __LINE__,service,phy_interface,value);
     memset(&initParam, 0, sizeof(initParam));
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
-#define FIELD_NAME "DiagnosticsState"
-#else
-#define FIELD_NAME "TestState"
-#endif
-    snprintf(initParam.name, sizeof(initParam.name), PHYINTERFACE_TABLE_NAME"%s", service, phy_interface, FIELD_NAME);
+    snprintf(initParam.name, sizeof(initParam.name), PHYINTERFACE_TABLE_NAME"%s", service, phy_interface, "TestState");
     snprintf(initParam.value, sizeof(initParam.value), "%s", value);
     initParam.type = PARAM_STRING;
     json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
@@ -843,7 +852,7 @@ static int32_t jsonCfgSetBoundIfName(uint32_t service, const char *value)
     snprintf(initParam.value, sizeof(initParam.value), "%s", value);
     initParam.type = PARAM_STRING;
     json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
-    TelcoVoiceMgrSetSyseventData(SYSEVENT_UPDATE_IFNAME, value);
+    TelcoVoiceMgrSetSyseventData(SYSEVENT_UPDATE_IFNAME, (char *)value);
     return 0;
 }
 static int32_t jsonCfgSetIpAddressFamily(uint32_t service, const char *value)
@@ -854,7 +863,7 @@ static int32_t jsonCfgSetIpAddressFamily(uint32_t service, const char *value)
     snprintf(initParam.value, sizeof(initParam.value), "%s", value);
     initParam.type = PARAM_STRING;
     json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
-    TelcoVoiceMgrSetSyseventData(SYSEVENT_UPDATE_IPFAMILY, value);
+    TelcoVoiceMgrSetSyseventData(SYSEVENT_UPDATE_IPFAMILY, (char *)value);
     return 0;
 }
 
@@ -887,7 +896,6 @@ static struct
     { "VoiceProfile", NULL, jsonParseAllVoiceProfiles },
     { "X_RDK_DisableLoopCurrentUntilRegistered", jsonCfgDoDisableLoopCurrent, NULL }
 };
-#define VOICE_HAL_NUM_ELEMS(x) (sizeof(x)/sizeof(x[0]))
 
 /* jsonParseVoiceService: */
 /**
@@ -1327,23 +1335,103 @@ static int32_t jsonParseAllLines(uint32_t service, uint32_t profile, cJSON *line
     }
     return 0;
 }
-/* This structure makes the connection between Line
- * JSON objects and the voice_hal functions that set them */
 
 static int32_t jsonCfgSetDirectoryNumber(uint32_t service, uint32_t profile, uint32_t line, char *value)
 {
     fprintf(stderr,"\n%s(%d) - service[%d], profile[%d], value[%s]", __func__, __LINE__,service,profile,value);
     memset(&initParam, 0, sizeof(initParam));
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
-    snprintf(initParam.name, sizeof(initParam.name), LINE_TABLE_NAME"%s", service, line, "DirectoryNumber");
-#else
     snprintf(initParam.name, sizeof(initParam.name), LINE_TABLE_NAME"%s", service, profile, line, "DirectoryNumber");
-#endif
     snprintf(initParam.value, sizeof(initParam.value), "%s", value);
     initParam.type = PARAM_STRING;
     json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
     return 0;
 }
+
+static bool checkBool(bool *out, char *inString)
+{
+    if ( !strncmp(inString, "true", 4) || !strncmp(inString, "TRUE", 4) )
+    {
+        *out = true;
+        return true;
+    }
+    if ( !strncmp(inString, "false", 5) || !strncmp(inString, "FALSE", 5) )
+    {
+        *out = false;
+        return true;
+    }
+    return false;
+}
+
+
+/*
+ * the cfFuncs array makes the connection between DM object
+ * strings and the typedefs used in the get/set functions */
+
+static struct
+{
+    char *obj;
+    TELCOVOICEMGR_VOICE_CALL_FEATURE_TYPE_ENUM e;
+} cfFuncs[] =
+{
+    { "CallWaitingEnable",  VOICE_CALLING_FEATURE_CALL_WAITING },
+    { "MWIEnable", VOICE_CALLING_FEATURE_MSG_WAIT_INDICATOR },
+    { "X_RDK-Central_COM_ConferenceCallingEnable", VOICE_CALLING_FEATURE_CONF_CALL },
+    { "X_RDK-Central_COM_HoldEnable", VOICE_CALLING_FEATURE_HOLD },
+    { "X_RDK-Central_COM_PhoneCallerIDEnable", VOICE_CALLING_FEATURE_CALLER_ID }
+};
+
+/* jsonCfgDoCallingFeatures: */
+/**
+* @description Given a Line JSON object, parse the 5 calling feature flags
+* @param cJSON *lineObj - pointer to the JSON object holding the callingFeatures
+* @param uint32_t voiceService - the index of the voice service loop
+* @param uint32_t profile - the index of the profile loop
+* @param uint32_t line - the index of the line loop
+*              Note that missing or invalid items do not cause a failure -just skip them
+*
+* @return nothing
+*
+* @execution Synchronous.
+* @sideeffect Updates data model.
+*
+*/
+
+void jsonCfgDoCallingFeature(uint32_t service, uint32_t profile, uint32_t line, cJSON *lineObj)
+{
+    cJSON *cfItem = NULL;
+    uint32_t i;
+    bool cfValue;
+
+    for (i=0 ; i< VOICE_HAL_NUM_ELEMS(cfFuncs) ; i++)
+    {
+        if (NULL != (cfItem = cJSON_GetObjectItemCaseSensitive(lineObj, cfFuncs[i].obj)))
+        {
+            CcspTraceInfo(("jsonCfgDoCallingFeature match \n"));
+            if (cJSON_IsString(cfItem))
+                if (cfItem->valuestring != NULL)
+                {
+                    if (checkBool(&cfValue, cfItem->valuestring))
+                    {
+                        initialise_line_calling_features(service + 1, profile + 1, line + 1, cfFuncs[i].e, cfValue);
+                        CcspTraceInfo(("jsonCfgDoCallingFeature found a bool value %s \n", cfItem->valuestring));
+                    }
+                            else
+                    {
+                        CcspTraceInfo(("jsonCfgDoCallingFeature not a bool value %s \n", cfItem->valuestring));
+                    }
+
+                }
+        }
+        else
+        {
+            CcspTraceInfo(("jsonCfgDoCallingFeature no match \n"));
+        }
+
+    }
+}
+
+/* This structure makes the connection between Line
+ * JSON objects and the voice_hal functions that set them */
 
 static struct
 {
@@ -1425,149 +1513,187 @@ static void jsonParseOneLine(uint32_t service, uint32_t profile, uint32_t line, 
     }
 }
 
-static int32_t jsonCfgSetAuthCredentials
-    (
-        uint32_t                service,
-        uint32_t                profile,
-        uint32_t                line,
-        TELCOVOICEMGR_VOICE_CREDENTIAL_TYPE_ENUM   eAuthCredential,
-        char*                   value
-    )
+static int32_t jsonCfgSetLineEnable(uint32_t service, uint32_t profile, uint32_t line, char* buffer)
 {
-    fprintf(stderr,"\n%s(%d) - service[%d], profile[%d], Line[%d] value[%s]", __func__, __LINE__,service,profile,line,value);
-    if(eAuthCredential == VOICE_HAL_AUTH_UNAME)
+    if(!buffer)
     {
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
-    snprintf(initParam.name, JSON_MAX_STR_ARR_SIZE, LINE_SIP_TABLE_NAME"%s", service, line, "AuthUserName");
-#else
-    snprintf(initParam.name, JSON_MAX_STR_ARR_SIZE, LINE_SIP_TABLE_NAME"%s", service, profile, line, "AuthUserName");
-#endif
+        CcspTraceInfo(("Invalid buffer \n"));
+        return -1;
     }
-    else if(eAuthCredential == VOICE_HAL_AUTH_PWD)
+    memset(&initParam, 0, sizeof(initParam));
+    snprintf(initParam.name,JSON_MAX_STR_ARR_SIZE, LINE_TABLE_NAME"%s", service,profile,line,"Enable");
+    initParam.type = PARAM_STRING;
+
+    if (!strcmp(buffer, "Enabled"))
     {
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
-    snprintf(initParam.name, JSON_MAX_STR_ARR_SIZE, LINE_SIP_TABLE_NAME"%s", service, line, "AuthPassword");
-#else
-    snprintf(initParam.name, JSON_MAX_STR_ARR_SIZE, LINE_SIP_TABLE_NAME"%s", service, profile, line, "AuthPassword");
-#endif
+        snprintf(initParam.value, sizeof(initParam.value), "%s", "Enabled");
+    }
+    else if (!strcmp(buffer, "Disabled"))
+    {
+        snprintf(initParam.value, sizeof(initParam.value), "%s", "Disabled");
+    }
+    else if (!strcmp(buffer, "Quiescent"))
+    {
+        snprintf(initParam.value, sizeof(initParam.value), "%s", "Quiescent");
     }
     else
     {
-        return ANSC_STATUS_FAILURE;
+        return -1;
     }
-    snprintf(initParam.value, sizeof(initParam.value), "%s", value);
-    initParam.type = PARAM_STRING;
+
     json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
     return 0;
 }
 
-int32_t jsonDecryptAndSavePassword(uint32_t service, uint32_t profile, uint32_t line, char *valuestring)
-{
-    char *pOutBuffer = NULL; uint32_t inLen, outLen; int32_t res;
-    inLen = strlen(valuestring);
-    outLen = (1 + inLen/2);
-    /* The decrypted pwd is half the length of the encrypted one plus \0 */
-    pOutBuffer = malloc(outLen);
-    if(NULL == pOutBuffer)
-    {
-        AnscTraceError(("%s:%d::Memory allocation failed\n", __FUNCTION__, __LINE__));
-        return ANSC_STATUS_FAILURE;
 
-    }
-    jsonPwdDecode(valuestring, inLen+1, pOutBuffer, outLen);
-    res = jsonCfgSetAuthCredentials(service, profile, line, VOICE_HAL_AUTH_PWD, pOutBuffer);
-    free(pOutBuffer);
-    return res;
-}
-/* jsonParseUserName */
+/* jsonCfgDoVoiceProcessing: */
 /**
-* @description A simple utility function that converts from the 4 parameter format used by other SIP
-*               profile functions, to the 5 parameters used by voice_hal_setAuthCredentials()
-* @param uint32_t service - input the index of the service loop being parsed, usually 1
-* @param uint32_t profile - input the index of the profile loop being parsed, usually 1
-* @param uint32_t line - input the index of the line loop being parsed, usually 1
-* @param char * userName - the user name as read form the JSON file
-*
-* @return the status of the voice_hal_setXxx() function.
-*
-* @execution Synchronous.
-* @sideeffect Updates data model.
-*/
-int32_t jsonParseUserName(uint32_t service, uint32_t profile, uint32_t line, char *userName)
-{
-    return jsonCfgSetAuthCredentials(service, profile, line,
-        VOICE_HAL_AUTH_UNAME, userName );
-}
-/* This structure makes the connection between Line/SIP JSON settings
- * (user/pass/SIPuri) and the voice_hal functions that handle them */
-
- static int32_t jsonCfgSetSipUri(uint32_t service, uint32_t profile, uint32_t line, const char *value)
-{
-    fprintf(stderr,"\n%s(%d) - service[%d], profile[%d], value[%s]", __func__, __LINE__,service,profile,value);
-    memset(&initParam, 0, sizeof(initParam));
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
-    snprintf(initParam.name, sizeof(initParam.name), LINE_SIP_TABLE_NAME"%s", service, line, "RegisterURI");
-#else
-    snprintf(initParam.name, sizeof(initParam.name), LINE_SIP_TABLE_NAME"%s", service, profile, line, "URI");
-#endif
-    snprintf(initParam.value, sizeof(initParam.value), "%s", value);
-    initParam.type = PARAM_STRING;
-    json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
-    return 0;
-}
-
-static struct
-{
-    char *obj;
-    int32_t (*func) ();
-    void (*handler)(void);   // Not used - for consistency
-} lineSipFuncs[] =
-{
-    { "AuthPassword", jsonDecryptAndSavePassword, NULL },
-    { "AuthUserName", jsonParseUserName, NULL },
-    { "URI", jsonCfgSetSipUri, NULL }
-};
-/* jsonParseLineSIP: */
-/**
-* @description Given a Line/SIP JSON object, parse the SIP object and call the functions to set the value
-*              Note: Profile/SIP also exists in the data model, and is parsed by jsonParseProfileSIP
-* @param uint32_t service - input the index of the service loop being parsed, usually 1
-* @param uint32_t profile - input the index of the profile loop being parsed, usually 1
-* @param uint32_t line - input the index of the line loop being parsed, usually 1
-* @param cJSON *SIP - pointer to the JSON structure holding values
+* @description Given a Line JSON object, parse the Tx, Rx gains
+* @param cJSON *lineObj - pointer to the JSON object holding the callingFeatures
+* @param uint32_t voiceService - the index of the voice service loop
+* @param uint32_t profile - the index of the profile loop
+* @param uint32_t line - the index of the line loop
 *              Note that missing or invalid items do not cause a failure -just skip them
 *
 * @return nothing
 *
 * @execution Synchronous.
 * @sideeffect Updates data model.
+*
 */
-static void jsonParseLineSIP(uint32_t service, uint32_t profile, uint32_t line, cJSON *vp)
-{
-    int i;
-    cJSON *vsItem = NULL;
 
-    /* Check for invalid object */
-    if (NULL == vp)
+static void jsonCfgDoVoiceProcessing(uint32_t service, uint32_t profile, uint32_t line, cJSON *lineObj)
+{
+    cJSON *procItem = NULL;
+    /* Only 2 objects, so do them in-line */
+    if (NULL != (procItem = cJSON_GetObjectItemCaseSensitive(lineObj, "ReceiveGain")))
     {
-        CcspTraceError(("%s: NULL JSON object found!\n", __FUNCTION__));
-        return;
+        if (cJSON_IsNumber(procItem))
+        {
+            memset(&initParam, 0, sizeof(initParam));
+            snprintf(initParam.name, sizeof(initParam.name), LINE_VOICE_PROCESSING_TABLE_NAME"%s", service+1, profile+1, line+1, "ReceiveGain");
+            snprintf(initParam.value, sizeof(initParam.value), "%d", procItem->valueint);
+            initParam.type = PARAM_INTEGER;
+            json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
+        }
+        else
+        {
+            CcspTraceError((" jsonCfgDoVoiceProcessing invalid Rx format!\n"));
+        }
+
+    }
+    if (NULL != (procItem = cJSON_GetObjectItemCaseSensitive(lineObj, "TransmitGain")))
+    {
+        if (cJSON_IsNumber(procItem))
+        {
+            memset(&initParam, 0, sizeof(initParam));
+            snprintf(initParam.name, sizeof(initParam.name), LINE_VOICE_PROCESSING_TABLE_NAME"%s", service+1, profile+1, line+1, "TransmitGain");
+            snprintf(initParam.value, sizeof(initParam.value), "%d", procItem->valueint);
+            initParam.type = PARAM_INTEGER;
+            json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
+        }
+        else
+        {
+             CcspTraceError((" jsonCfgDoVoiceProcessing invalid Tx format!\n"));
+        }
     }
 
-    for (i=0 ; i<VOICE_HAL_NUM_ELEMS(lineSipFuncs) ; i++)
+}
+
+static int32_t jsonCfgSetRtpDscpMark(uint32_t service,uint32_t profile,uint32_t value)
+{
+    fprintf(stderr,"\n%s(%d) - service[%d], profile[%d], value[%d]", __func__, __LINE__,service,profile,value);
+    TelcoVoiceMgrInitMark(service, profile, value, RTP, PARAM_NAME_DSCP_MARK);
+    memset(&initParam, 0, sizeof(initParam));
+    snprintf(initParam.name, sizeof(initParam), RTP_TABLE_NAME"%s", service, profile, PARAM_NAME_DSCP_MARK);
+    snprintf(initParam.value, sizeof(initParam.value), "%lu", value);
+    initParam.type = PARAM_UNSIGNED_INTEGER;
+    json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
+    return 0;
+}
+static int32_t jsonCfgSetRtpEthernetPriorityMark(uint32_t service,uint32_t profile,int32_t value)
+{
+    fprintf(stderr,"\n%s(%d) - service[%d], profile[%d], value[%d]", __func__, __LINE__,service,profile,value);
+    TelcoVoiceMgrInitMark(service, profile, value, RTP, PARAM_NAME_ETHERNET_PRIORITY_MARK);
+    memset(&initParam, 0, sizeof(initParam));
+    snprintf(initParam.name, sizeof(initParam), RTP_TABLE_NAME"%s", service, profile, PARAM_NAME_ETHERNET_PRIORITY_MARK);
+    snprintf(initParam.value, sizeof(initParam.value), "%d", value);
+    initParam.type = PARAM_UNSIGNED_INTEGER;
+    json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
+    return 0;
+}
+
+/* This structure makes the connection between Profile/RTP JSON
+ * settings and the voice_hal functions that handle them */
+static struct
+{
+    char *obj;
+    int32_t (*uintHandler) (uint32_t/* service */, uint32_t /* profile */, uint32_t value);
+    int32_t (*intHandler) (uint32_t/* service */, uint32_t /* profile */, int32_t value);
+} profRtpFuncs[] =
+{
+  { "DSCPMark", jsonCfgSetRtpDscpMark, NULL },
+  { "EthernetPriorityMark", NULL, jsonCfgSetRtpEthernetPriorityMark }
+};
+/* jsonParseProfileRTP: */
+/**
+* @description Given a Profile/RTP JSON object, parse the RTP object and call the functions to set the value
+* @param uint32_t service - input the index of the service loop being parsed, usually 1
+* @param uint32_t profile - input the index of the profile loop being parsed, usually 1
+* @param cJSON *ps - pointer to the JSON structure holding values
+*              Note that missing or invalid items do not cause a failure -just skip them
+*
+* @return 0 - for compatibility with other functions
+*
+* @execution Synchronous.
+* @sideeffect Updates data model.
+*/
+static int32_t jsonParseProfileRTP(uint32_t service, uint32_t profile, cJSON *ps)
+{
+    int i;
+    cJSON *psItem = NULL;
+
+    CcspTraceInfo(("%s\n", __FUNCTION__));
+    /* Check for invalid object */
+    if (NULL == ps)
     {
-        if (NULL != (vsItem = cJSON_GetObjectItemCaseSensitive(vp, lineSipFuncs[i].obj)))
+        CcspTraceError(("%s: NULL JSON object found!\n", __FUNCTION__));
+        return 0;
+    }
+
+    for (i=0 ; i<VOICE_HAL_NUM_ELEMS(profRtpFuncs) ; i++)
+    {
+        if (NULL != (psItem = cJSON_GetObjectItemCaseSensitive(ps, profRtpFuncs[i].obj)))
         {
-            if (cJSON_IsString(vsItem))
+            if (cJSON_IsNumber(psItem))
             {
-                if (vsItem->valuestring != NULL)
+                if (NULL != profRtpFuncs[i].uintHandler)
                 {
-                    CcspTraceInfo(("SIP URI/user/pass: type is %d, param value is %s\n", i, vsItem->valuestring));
-                    (void)(*lineSipFuncs[i].func)(service+1, profile+1, line+1, vsItem->valuestring);
+                    /* Set a numeric value rather than string */
+                    (*profRtpFuncs[i].uintHandler)(service+1, profile+1, (uint32_t)psItem->valueint);
+                }
+                else
+                {
+                    if (NULL != profRtpFuncs[i].intHandler)
+                    {
+                        (*profRtpFuncs[i].intHandler)(service+1, profile+1, (int32_t)psItem->valueint);
+                    }
                 }
             }
         }
     }
+    return 0;
+}
+
+ static int32_t jsonCfgSetSipUri(uint32_t service, uint32_t profile, uint32_t line, const char *value)
+{
+    fprintf(stderr,"\n%s(%d) - service[%d], profile[%d], value[%s]", __func__, __LINE__,service,profile,value);
+    memset(&initParam, 0, sizeof(initParam));
+    snprintf(initParam.name, sizeof(initParam.name), LINE_SIP_TABLE_NAME"%s", service, profile, line, "URI");
+    snprintf(initParam.value, sizeof(initParam.value), "%s", value);
+    initParam.type = PARAM_STRING;
+    json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
+    return 0;
 }
 
 static int32_t jsonCfgSetSipDscpMark(uint32_t service, uint32_t profile, uint32_t value)
@@ -1732,6 +1858,7 @@ static struct
   { "X_RDK_PRACKRequired", NULL, jsonCfgSetEnablePrackRequired, NULL },
   { "X_RDK-Central_COM_NetworkDisconnect", NULL, jsonCfgSetEnableNetworkDisconnect, NULL }
 };
+
 /* jsonParseProfileSIP: */
 /**
 * @description Given a Profile/SIP JSON object, parse the SIP object and call the functions to set the value
@@ -1806,90 +1933,178 @@ static int32_t jsonParseProfileSIP(uint32_t service, uint32_t profile, cJSON *ps
     return 0;
 }
 
-static int32_t jsonCfgSetRtpDscpMark(uint32_t service,uint32_t profile,uint32_t value)
+int32_t jsonDecryptAndSavePassword(uint32_t service, uint32_t profile, uint32_t line, char *valuestring)
 {
-    fprintf(stderr,"\n%s(%d) - service[%d], profile[%d], value[%d]", __func__, __LINE__,service,profile,value);
-    TelcoVoiceMgrInitMark(service, profile, value, RTP, PARAM_NAME_DSCP_MARK);
-    memset(&initParam, 0, sizeof(initParam));
-    snprintf(initParam.name, sizeof(initParam), RTP_TABLE_NAME"%s", service, profile, PARAM_NAME_DSCP_MARK);
-    snprintf(initParam.value, sizeof(initParam.value), "%lu", value);
-    initParam.type = PARAM_UNSIGNED_INTEGER;
-    json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
-    return 0;
-}
-static int32_t jsonCfgSetRtpEthernetPriorityMark(uint32_t service,uint32_t profile,int32_t value)
-{
-    fprintf(stderr,"\n%s(%d) - service[%d], profile[%d], value[%d]", __func__, __LINE__,service,profile,value);
-    TelcoVoiceMgrInitMark(service, profile, value, RTP, PARAM_NAME_ETHERNET_PRIORITY_MARK);
-    memset(&initParam, 0, sizeof(initParam));
-    snprintf(initParam.name, sizeof(initParam), RTP_TABLE_NAME"%s", service, profile, PARAM_NAME_ETHERNET_PRIORITY_MARK);
-    snprintf(initParam.value, sizeof(initParam.value), "%d", value);
-    initParam.type = PARAM_UNSIGNED_INTEGER;
-    json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
-    return 0;
-}
+    char *pOutBuffer = NULL; uint32_t inLen, outLen; int32_t res;
+    inLen = strlen(valuestring);
+    outLen = (1 + inLen/2);
+    /* The decrypted pwd is half the length of the encrypted one plus \0 */
+    pOutBuffer = malloc(outLen);
+    if(NULL == pOutBuffer)
+    {
+        AnscTraceError(("%s:%d::Memory allocation failed\n", __FUNCTION__, __LINE__));
+        return ANSC_STATUS_FAILURE;
 
-/* This structure makes the connection between Profile/RTP JSON
- * settings and the voice_hal functions that handle them */
-static struct
-{
-    char *obj;
-    int32_t (*uintHandler) (uint32_t/* service */, uint32_t /* profile */, uint32_t value);
-    int32_t (*intHandler) (uint32_t/* service */, uint32_t /* profile */, int32_t value);
-} profRtpFuncs[] =
-{
-  { "DSCPMark", jsonCfgSetRtpDscpMark, NULL },
-  { "EthernetPriorityMark", NULL, jsonCfgSetRtpEthernetPriorityMark }
-};
-/* jsonParseProfileRTP: */
+    }
+    jsonPwdDecode(valuestring, inLen+1, pOutBuffer, outLen);
+    res = jsonCfgSetAuthCredentials(service, profile, line, VOICE_HAL_AUTH_PWD, pOutBuffer);
+    free(pOutBuffer);
+    return res;
+}
+/* jsonParseUserName */
 /**
-* @description Given a Profile/RTP JSON object, parse the RTP object and call the functions to set the value
+* @description A simple utility function that converts from the 4 parameter format used by other SIP
+*               profile functions, to the 5 parameters used by voice_hal_setAuthCredentials()
 * @param uint32_t service - input the index of the service loop being parsed, usually 1
 * @param uint32_t profile - input the index of the profile loop being parsed, usually 1
-* @param cJSON *ps - pointer to the JSON structure holding values
-*              Note that missing or invalid items do not cause a failure -just skip them
+* @param uint32_t line - input the index of the line loop being parsed, usually 1
+* @param char * userName - the user name as read form the JSON file
 *
-* @return 0 - for compatibility with other functions
+* @return the status of the voice_hal_setXxx() function.
 *
 * @execution Synchronous.
 * @sideeffect Updates data model.
 */
-static int32_t jsonParseProfileRTP(uint32_t service, uint32_t profile, cJSON *ps)
+int32_t jsonParseUserName(uint32_t service, uint32_t profile, uint32_t line, char *userName)
+{
+    return jsonCfgSetAuthCredentials(service, profile, line,
+        VOICE_HAL_AUTH_UNAME, userName );
+}
+
+static struct
+{
+    char *obj;
+    int32_t (*func) ();
+    void (*handler)(void);   // Not used - for consistency
+} lineSipFuncs[] =
+{
+    { "AuthPassword", jsonDecryptAndSavePassword, NULL },
+    { "AuthUserName", jsonParseUserName, NULL },
+    { "URI", jsonCfgSetSipUri, NULL }
+};
+/* jsonParseLineSIP: */
+/**
+* @description Given a Line/SIP JSON object, parse the SIP object and call the functions to set the value
+*              Note: Profile/SIP also exists in the data model, and is parsed by jsonParseProfileSIP
+* @param uint32_t service - input the index of the service loop being parsed, usually 1
+* @param uint32_t profile - input the index of the profile loop being parsed, usually 1
+* @param uint32_t line - input the index of the line loop being parsed, usually 1
+* @param cJSON *SIP - pointer to the JSON structure holding values
+*              Note that missing or invalid items do not cause a failure -just skip them
+*
+* @return nothing
+*
+* @execution Synchronous.
+* @sideeffect Updates data model.
+*/
+static void jsonParseLineSIP(uint32_t service, uint32_t profile, uint32_t line, cJSON *vp)
 {
     int i;
-    cJSON *psItem = NULL;
+    cJSON *vsItem = NULL;
 
-    CcspTraceInfo(("%s\n", __FUNCTION__));
     /* Check for invalid object */
-    if (NULL == ps)
+    if (NULL == vp)
     {
         CcspTraceError(("%s: NULL JSON object found!\n", __FUNCTION__));
-        return 0;
+        return;
     }
 
-    for (i=0 ; i<VOICE_HAL_NUM_ELEMS(profRtpFuncs) ; i++)
+    for (i=0 ; i<VOICE_HAL_NUM_ELEMS(lineSipFuncs) ; i++)
     {
-        if (NULL != (psItem = cJSON_GetObjectItemCaseSensitive(ps, profRtpFuncs[i].obj)))
+        if (NULL != (vsItem = cJSON_GetObjectItemCaseSensitive(vp, lineSipFuncs[i].obj)))
         {
-            if (cJSON_IsNumber(psItem))
+            if (cJSON_IsString(vsItem))
             {
-                if (NULL != profRtpFuncs[i].uintHandler)
+                if (vsItem->valuestring != NULL)
                 {
-                    /* Set a numeric value rather than string */
-                    (*profRtpFuncs[i].uintHandler)(service+1, profile+1, (uint32_t)psItem->valueint);
-                }
-                else
-                {
-                    if (NULL != profRtpFuncs[i].intHandler)
-                    {
-                        (*profRtpFuncs[i].intHandler)(service+1, profile+1, (int32_t)psItem->valueint);
-                    }
+                    CcspTraceInfo(("SIP URI/user/pass: type is %d, param value is %s\n", i, vsItem->valuestring));
+                    (void)(*lineSipFuncs[i].func)(service+1, profile+1, line+1, vsItem->valuestring);
                 }
             }
         }
     }
+}
+
+static ANSC_STATUS initialise_line_calling_features(uint32_t uiService, uint32_t uiProfile, uint32_t uiLine, TELCOVOICEMGR_VOICE_CALL_FEATURE_TYPE_ENUM eFeature, BOOL bStatus)
+{
+    memset(&initParam, 0, sizeof(initParam));
+
+    if(eFeature == VOICE_CALLING_FEATURE_CALL_WAITING)
+    {
+       snprintf(initParam.name,JSON_MAX_STR_ARR_SIZE, LINE_CALING_FEATURE_TABLE_NAME"%s", uiService,uiProfile,uiLine,"CallWaitingEnable");
+    }
+    else if(eFeature == VOICE_CALLING_FEATURE_MSG_WAIT_INDICATOR)
+    {
+       snprintf(initParam.name,JSON_MAX_STR_ARR_SIZE, LINE_CALING_FEATURE_TABLE_NAME"%s", uiService,uiProfile,uiLine,"MWIEnable");
+    }
+    else if(eFeature == VOICE_CALLING_FEATURE_CONF_CALL)
+    {
+       snprintf(initParam.name,JSON_MAX_STR_ARR_SIZE, LINE_CALING_FEATURE_TABLE_NAME"%s", uiService,uiProfile,uiLine,"X_RDK-Central_COM_ConferenceCallingEnable");
+    }
+    else if(eFeature == VOICE_CALLING_FEATURE_HOLD)
+    {
+       snprintf(initParam.name,JSON_MAX_STR_ARR_SIZE, LINE_CALING_FEATURE_TABLE_NAME"%s", uiService,uiProfile,uiLine,"X_RDK-Central_COM_HoldEnable");
+    }
+    else if(eFeature == VOICE_CALLING_FEATURE_CALLER_ID)
+    {
+       snprintf(initParam.name,JSON_MAX_STR_ARR_SIZE, LINE_CALING_FEATURE_TABLE_NAME"%s", uiService,uiProfile,uiLine,"X_RDK-Central_COM_PhoneCallerIDEnable");
+    }
+    else
+    {
+        return ANSC_STATUS_FAILURE;
+    }
+
+    if(bStatus)
+    {
+       snprintf(initParam.value, sizeof(initParam.value),"%s","true");
+    }
+    else
+    {
+       snprintf(initParam.value, sizeof(initParam.value),"%s","false");
+    }
+    
+    initParam.type = PARAM_BOOLEAN;
+    json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
+    return ANSC_STATUS_SUCCESS;
+}
+
+#endif
+static int32_t jsonCfgSetAuthCredentials
+    (
+        uint32_t                service,
+        uint32_t                profile,
+        uint32_t                line,
+        TELCOVOICEMGR_VOICE_CREDENTIAL_TYPE_ENUM   eAuthCredential,
+        char*                   value
+    )
+{
+    fprintf(stderr,"\n%s(%d) - service[%d], profile[%d], Line[%d] value[%s]", __func__, __LINE__,service,profile,line,value);
+    if(eAuthCredential == VOICE_HAL_AUTH_UNAME)
+    {
+#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
+    snprintf(initParam.name, JSON_MAX_STR_ARR_SIZE, LINE_SIP_TABLE_NAME"%s", service, line, "AuthUserName");
+#else
+    snprintf(initParam.name, JSON_MAX_STR_ARR_SIZE, LINE_SIP_TABLE_NAME"%s", service, profile, line, "AuthUserName");
+#endif
+    }
+    else if(eAuthCredential == VOICE_HAL_AUTH_PWD)
+    {
+#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
+    snprintf(initParam.name, JSON_MAX_STR_ARR_SIZE, LINE_SIP_TABLE_NAME"%s", service, line, "AuthPassword");
+#else
+    snprintf(initParam.name, JSON_MAX_STR_ARR_SIZE, LINE_SIP_TABLE_NAME"%s", service, profile, line, "AuthPassword");
+#endif
+    }
+    else
+    {
+        return ANSC_STATUS_FAILURE;
+    }
+    snprintf(initParam.value, sizeof(initParam.value), "%s", value);
+    initParam.type = PARAM_STRING;
+    json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
     return 0;
 }
+
 /***********   Password utility functions  ****************/
 
 /* jsonPwdEncode: */
@@ -1980,197 +2195,6 @@ int jsonPwdDecode(const char *pInBuf, uint32_t inLen, char *pOutBuf, uint32_t ou
     return 0;
 }
 
-/* jsonCfgDoVoiceProcessing: */
-/**
-* @description Given a Line JSON object, parse the Tx, Rx gains
-* @param cJSON *lineObj - pointer to the JSON object holding the callingFeatures
-* @param uint32_t voiceService - the index of the voice service loop
-* @param uint32_t profile - the index of the profile loop
-* @param uint32_t line - the index of the line loop
-*              Note that missing or invalid items do not cause a failure -just skip them
-*
-* @return nothing
-*
-* @execution Synchronous.
-* @sideeffect Updates data model.
-*
-*/
-
-static void jsonCfgDoVoiceProcessing(uint32_t service, uint32_t profile, uint32_t line, cJSON *lineObj)
-{
-    cJSON *procItem = NULL;
-    /* Only 2 objects, so do them in-line */
-    if (NULL != (procItem = cJSON_GetObjectItemCaseSensitive(lineObj, "ReceiveGain")))
-    {
-        if (cJSON_IsNumber(procItem))
-        {
-            memset(&initParam, 0, sizeof(initParam));
-#ifndef FEATURE_RDKB_VOICE_DM_TR104_V2
-            snprintf(initParam.name, sizeof(initParam.name), LINE_VOICE_PROCESSING_TABLE_NAME"%s", service+1, profile+1, line+1, "ReceiveGain");
-#else
-            snprintf(initParam.name, sizeof(initParam.name), LINE_VOICE_PROCESSING_TABLE_NAME"%s", service+1, line+1, "ReceiveGain");
-#endif
-            snprintf(initParam.value, sizeof(initParam.value), "%d", procItem->valueint);
-            initParam.type = PARAM_INTEGER;
-            json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
-        }
-        else
-        {
-            CcspTraceError((" jsonCfgDoVoiceProcessing invalid Rx format!\n"));
-        }
-
-    }
-    if (NULL != (procItem = cJSON_GetObjectItemCaseSensitive(lineObj, "TransmitGain")))
-    {
-        if (cJSON_IsNumber(procItem))
-        {
-            memset(&initParam, 0, sizeof(initParam));
-#ifndef FEATURE_RDKB_VOICE_DM_TR104_V2
-            snprintf(initParam.name, sizeof(initParam.name), LINE_VOICE_PROCESSING_TABLE_NAME"%s", service+1, profile+1, line+1, "TransmitGain");
-#else
-            snprintf(initParam.name, sizeof(initParam.name), LINE_VOICE_PROCESSING_TABLE_NAME"%s", service+1, line+1, "TransmitGain");
-#endif
-            snprintf(initParam.value, sizeof(initParam.value), "%d", procItem->valueint);
-            initParam.type = PARAM_INTEGER;
-            json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
-        }
-        else
-        {
-             CcspTraceError((" jsonCfgDoVoiceProcessing invalid Tx format!\n"));
-        }
-    }
-
-}
-
-static bool checkBool(bool *out, char *inString)
-{
-    if ( !strncmp(inString, "true", 4) || !strncmp(inString, "TRUE", 4) )
-    {
-        *out = true;
-        return true;
-    }
-    if ( !strncmp(inString, "false", 5) || !strncmp(inString, "FALSE", 5) )
-    {
-        *out = false;
-        return true;
-    }
-    return false;
-}
-
-/* jsonCfgDoCallingFeatures: */
-/**
-* @description Given a Line JSON object, parse the 5 calling feature flags
-* @param cJSON *lineObj - pointer to the JSON object holding the callingFeatures
-* @param uint32_t voiceService - the index of the voice service loop
-* @param uint32_t profile - the index of the profile loop
-* @param uint32_t line - the index of the line loop
-*              Note that missing or invalid items do not cause a failure -just skip them
-*
-* @return nothing
-*
-* @execution Synchronous.
-* @sideeffect Updates data model.
-*
-*/
-/*
- * the cfFuncs array makes the connection between DM object
- * strings and the typedefs used in the get/set functions */
-
-static struct
-{
-    char *obj;
-    TELCOVOICEMGR_VOICE_CALL_FEATURE_TYPE_ENUM e;
-} cfFuncs[] =
-{
-    { "CallWaitingEnable",  VOICE_CALLING_FEATURE_CALL_WAITING },
-    { "MWIEnable", VOICE_CALLING_FEATURE_MSG_WAIT_INDICATOR },
-    { "X_RDK-Central_COM_ConferenceCallingEnable", VOICE_CALLING_FEATURE_CONF_CALL },
-    { "X_RDK-Central_COM_HoldEnable", VOICE_CALLING_FEATURE_HOLD },
-    { "X_RDK-Central_COM_PhoneCallerIDEnable", VOICE_CALLING_FEATURE_CALLER_ID }
-};
-void jsonCfgDoCallingFeature(uint32_t service, uint32_t profile, uint32_t line, cJSON *lineObj)
-{
-    cJSON *cfItem = NULL;
-    uint32_t i;
-    bool cfValue;
-
-    for (i=0 ; i< VOICE_HAL_NUM_ELEMS(cfFuncs) ; i++)
-    {
-        if (NULL != (cfItem = cJSON_GetObjectItemCaseSensitive(lineObj, cfFuncs[i].obj)))
-        {
-            CcspTraceInfo(("jsonCfgDoCallingFeature match \n"));
-            if (cJSON_IsString(cfItem))
-                if (cfItem->valuestring != NULL)
-                {
-                    if (checkBool(&cfValue, cfItem->valuestring))
-                    {
-                        initialise_line_calling_features(service + 1, profile + 1, line + 1, cfFuncs[i].e, cfValue);
-                        CcspTraceInfo(("jsonCfgDoCallingFeature found a bool value %s \n", cfItem->valuestring));
-                    }
-                            else
-                    {
-                        CcspTraceInfo(("jsonCfgDoCallingFeature not a bool value %s \n", cfItem->valuestring));
-                    }
-
-                }
-        }
-        else
-        {
-            CcspTraceInfo(("jsonCfgDoCallingFeature no match \n"));
-        }
-
-    }
-}
-
-static int32_t jsonCfgSetLineEnable(uint32_t service, uint32_t profile, uint32_t line, char* buffer)
-{
-    if(!buffer)
-    {
-        CcspTraceInfo(("Invalid buffer \n"));
-        return -1;
-    }
-    memset(&initParam, 0, sizeof(initParam));
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
-    snprintf(initParam.name,JSON_MAX_STR_ARR_SIZE, LINE_TABLE_NAME"%s", service,line,"Enable");
-    initParam.type = PARAM_BOOLEAN;
-#else
-    snprintf(initParam.name,JSON_MAX_STR_ARR_SIZE, LINE_TABLE_NAME"%s", service,profile,line,"Enable");
-    initParam.type = PARAM_STRING;
-#endif
-
-    if (!strcmp(buffer, "Enabled"))
-    {
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
-        snprintf(initParam.value, sizeof(initParam.value), "%s", "true");
-#else
-        snprintf(initParam.value, sizeof(initParam.value), "%s", "Enabled");
-#endif
-    }
-    else if (!strcmp(buffer, "Disabled"))
-    {
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
-        snprintf(initParam.value, sizeof(initParam.value), "%s", "false");
-#else
-        snprintf(initParam.value, sizeof(initParam.value), "%s", "Disabled");
-#endif
-    }
-    else if (!strcmp(buffer, "Quiescent"))
-    {
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
-        snprintf(initParam.value, sizeof(initParam.value), "%s", "false");
-#else
-        snprintf(initParam.value, sizeof(initParam.value), "%s", "Quiescent");
-#endif
-    }
-    else
-    {
-        return -1;
-    }
-
-    json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
-    return 0;
-}
-
 ANSC_STATUS voice_process_factory_default()
 {
     ANSC_STATUS returnStatus = ANSC_STATUS_SUCCESS;
@@ -2190,65 +2214,4 @@ ANSC_STATUS voice_process_factory_default()
     return returnStatus;
 }
 
-static ANSC_STATUS initialise_line_calling_features(uint32_t uiService, uint32_t uiProfile, uint32_t uiLine, TELCOVOICEMGR_VOICE_CALL_FEATURE_TYPE_ENUM eFeature, BOOL bStatus)
-{
-    memset(&initParam, 0, sizeof(initParam));
 
-    if(eFeature == VOICE_CALLING_FEATURE_CALL_WAITING)
-    {
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
-       snprintf(initParam.name,JSON_MAX_STR_ARR_SIZE, LINE_CALING_FEATURE_TABLE_NAME"%s", uiService,uiProfile,"CallWaitingEnable");
-#else
-       snprintf(initParam.name,JSON_MAX_STR_ARR_SIZE, LINE_CALING_FEATURE_TABLE_NAME"%s", uiService,uiProfile,uiLine,"CallWaitingEnable");
-#endif
-    }
-    else if(eFeature == VOICE_CALLING_FEATURE_MSG_WAIT_INDICATOR)
-    {
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
-       snprintf(initParam.name,JSON_MAX_STR_ARR_SIZE, LINE_CALING_FEATURE_TABLE_NAME"%s", uiService,uiProfile,"MWIEnable");
-#else
-       snprintf(initParam.name,JSON_MAX_STR_ARR_SIZE, LINE_CALING_FEATURE_TABLE_NAME"%s", uiService,uiProfile,uiLine,"MWIEnable");
-#endif
-    }
-    else if(eFeature == VOICE_CALLING_FEATURE_CONF_CALL)
-    {
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
-       snprintf(initParam.name,JSON_MAX_STR_ARR_SIZE, LINE_CALING_FEATURE_TABLE_NAME"%s", uiService,uiProfile,"X_RDK-Central_COM_ConferenceCallingEnable");
-#else
-       snprintf(initParam.name,JSON_MAX_STR_ARR_SIZE, LINE_CALING_FEATURE_TABLE_NAME"%s", uiService,uiProfile,uiLine,"X_RDK-Central_COM_ConferenceCallingEnable");
-#endif
-    }
-    else if(eFeature == VOICE_CALLING_FEATURE_HOLD)
-    {
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
-       snprintf(initParam.name,JSON_MAX_STR_ARR_SIZE, LINE_CALING_FEATURE_TABLE_NAME"%s", uiService,uiProfile,"X_RDK-Central_COM_HoldEnable");
-#else
-       snprintf(initParam.name,JSON_MAX_STR_ARR_SIZE, LINE_CALING_FEATURE_TABLE_NAME"%s", uiService,uiProfile,uiLine,"X_RDK-Central_COM_HoldEnable");
-#endif
-    }
-    else if(eFeature == VOICE_CALLING_FEATURE_CALLER_ID)
-    {
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
-       snprintf(initParam.name,JSON_MAX_STR_ARR_SIZE, LINE_CALING_FEATURE_TABLE_NAME"%s", uiService,uiProfile,"X_RDK-Central_COM_PhoneCallerIDEnable");
-#else
-       snprintf(initParam.name,JSON_MAX_STR_ARR_SIZE, LINE_CALING_FEATURE_TABLE_NAME"%s", uiService,uiProfile,uiLine,"X_RDK-Central_COM_PhoneCallerIDEnable");
-#endif
-    }
-    else
-    {
-        return ANSC_STATUS_FAILURE;
-    }
-
-    if(bStatus)
-    {
-       snprintf(initParam.value, sizeof(initParam.value),"%s","true");
-    }
-    else
-    {
-       snprintf(initParam.value, sizeof(initParam.value),"%s","false");
-    }
-    
-    initParam.type = PARAM_BOOLEAN;
-    json_hal_add_param(jInitMsg, SET_REQUEST_MESSAGE, &initParam);
-    return ANSC_STATUS_SUCCESS;
-}

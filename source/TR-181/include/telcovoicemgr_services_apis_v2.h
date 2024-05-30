@@ -3229,4 +3229,22 @@ ANSC_STATUS TelcoVoiceMgrDmlGetLineStats(UINT uiService, UINT uiProfile, UINT ui
 ANSC_STATUS TelcoVoiceMgrDmlSetX_RDK_FirewallRuleData(char * FirewallRuleData, ULONG uVsIndex, ULONG uVpQuantity);
 
 ANSC_STATUS TelcoVoiceMgrDmlGetX_RDK_LocalTimeZone(char *localTimeZone);
+ANSC_STATUS TelcoVoiceMgrDmlSetTimeOffset(uint32_t uiService, time_t uiOffset);
+ANSC_STATUS TelcoVoiceMgrInitMark(uint32_t uiService, uint32_t uiProfile, int iValue, PROTOCOL_TYPE protocol, char* paramName);
+ANSC_STATUS TelcoVoiceMgrDmlGetWanSKBMarks(char *pIpStateParamName, uint32_t *pSipSkbMark,  uint32_t *pRtpSkbMark);
+ANSC_STATUS TelcoVoiceMgrDmlSetWanEthernetPriorityMark(PROTOCOL_TYPE protocol, int32_t iValue);
+ANSC_STATUS TelcoVoiceMgrDmlSetBoundIpAddress(uint32_t uiService, char *BoundIpAddress);
+ANSC_STATUS TelcoVoiceMgrDml_MapLineStats(PDML_CALLCONTROL_LINE pDmlCallCtrlLine, TELCOVOICEMGR_DML_VOICESERVICE_STATS *pStats);
+ANSC_STATUS TelcoVoiceMgrDmlSetLogServerPort(uint32_t uiService, ULONG uLSPort);
+ANSC_STATUS TelcoVoiceMgrDmlGetVoiceProcessStatus(uint32_t uiService,TELCOVOICEMGR_VOICE_STATUS_ENUM *pvoice_status);
+ANSC_STATUS TelcoVoiceMgrDmlSetLoopCurrentDisabled(uint32_t uiService, BOOL bStatus);
+ANSC_STATUS TelcoVoiceMgrDmlSetWanEthernetPriorityMark(PROTOCOL_TYPE protocol, int32_t iValue);
+ANSC_STATUS TelcoVoiceMgrDmlGetWanEthernetPriorityMark(PROTOCOL_TYPE protocol, int32_t *iValue);
+ANSC_STATUS TelcoVoiceMgrDmlSetLineSIPAuthCredentials(uint32_t uiService, uint32_t uiProfile, uint32_t uiLine, TELCOVOICEMGR_VOICE_CREDENTIAL_TYPE_ENUM eAuthCredential, char* pBuffer);
+ANSC_STATUS TelcoVoiceMgrDmlGetCallLogStats(uint32_t uiService, uint32_t uiCallLog, uint32_t uiSession, TELCOVOICEMGR_DML_VOICESERVICE_CALLLOG_STATS *pStats);
+ANSC_STATUS TelcoVoiceMgrConvertProtocolToEnum(char *protocol, uint32_t *protocolEnum);
+ANSC_STATUS TelcoVoiceMgrDmlGetEthernetPriorityMark(uint32_t uiService, uint32_t uiProfile, PROTOCOL_TYPE protocol, int* pValue);
+int firewall_restart_for_voice(unsigned long timeout_ms);
+void TelcoVoiceMgrSyseventDeInit();
+int TelcoVoiceMgrSyseventInit();
 #endif /* _TELCOVOICEMGR_SERVICES_APIS_H */

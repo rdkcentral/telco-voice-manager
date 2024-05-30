@@ -5264,6 +5264,7 @@ ANSC_STATUS Map_hal_dml_MGCP(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, char* 
             else
             {
                 AnscTraceError(("%s:%d:: Invalid ParamName[%s] paramValue[%s].\n", __FUNCTION__, __LINE__, ParamName, pValue));
+                return ANSC_STATUS_FAILURE;
             }
         }
         else if( strstr(ParamName, "RegisterMode") )
@@ -5280,6 +5281,7 @@ ANSC_STATUS Map_hal_dml_MGCP(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, char* 
             else
             {
                 AnscTraceError(("%s:%d:: Invalid ParamName[%s] paramValue[%s].\n", __FUNCTION__, __LINE__, ParamName, pValue));
+                return ANSC_STATUS_FAILURE;
             }
         }
         else if( strstr(ParamName, "LocalPort") )
@@ -5330,7 +5332,7 @@ ANSC_STATUS Map_hal_dml_MGCP(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, char* 
         if(pMGCP_NetworkData == NULL)
         {
 
-            if( TelcoVoiceMgrDmlAddMGCPClient(pMGCP_NetworkList, hal_index - 1) != ANSC_STATUS_SUCCESS)
+            if( TelcoVoiceMgrDmlAddMGCPNetwork(pMGCP_NetworkList, hal_index - 1) != ANSC_STATUS_SUCCESS)
             {
                 AnscTraceError(("%s:%d:: Failed\n", __FUNCTION__, __LINE__));
                 return ANSC_STATUS_FAILURE;
@@ -5400,6 +5402,7 @@ ANSC_STATUS Map_hal_dml_MGCP(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, char* 
             else
             {
                 AnscTraceError(("%s:%d:: Invalid ParamName[%s] paramValue[%s].\n", __FUNCTION__, __LINE__, ParamName, pValue));
+                return ANSC_STATUS_FAILURE;
             }
         }
         else if( strstr(ParamName, "CallAgent1") )
@@ -5525,6 +5528,7 @@ ANSC_STATUS Map_hal_dml_MGCP(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, char* 
         return ANSC_STATUS_FAILURE;
     }
 
+    return ANSC_STATUS_SUCCESS;
 }
 ANSC_STATUS Map_hal_dml_H323(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, char* ParamName, char* pValue)
 {
@@ -5651,6 +5655,7 @@ ANSC_STATUS Map_hal_dml_H323(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, char* 
             else
             {
                 AnscTraceError(("%s:%d:: Invalid ParamName[%s] paramValue[%s].\n", __FUNCTION__, __LINE__, ParamName, pValue));
+                return ANSC_STATUS_FAILURE;
             }
 
         }
@@ -5784,6 +5789,7 @@ ANSC_STATUS Map_hal_dml_H323(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, char* 
             else
             {
                 AnscTraceError(("%s:%d:: Invalid ParamName[%s] paramValue[%s].\n", __FUNCTION__, __LINE__, ParamName, pValue));
+                return ANSC_STATUS_FAILURE;
             }
 
         }
@@ -5876,6 +5882,7 @@ ANSC_STATUS Map_hal_dml_H323(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, char* 
         return ANSC_STATUS_FAILURE;
     }
 
+    return ANSC_STATUS_SUCCESS;
 }
 ANSC_STATUS Map_hal_dml_Trunk(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, char* ParamName, char* pValue)
 {
@@ -8163,6 +8170,7 @@ ANSC_STATUS Map_hal_dml_Interwork(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, c
         else
         {
             AnscTraceError(("%s:%d:: Invalid ParamName[%s] paramValue[%s].\n", __FUNCTION__, __LINE__, ParamName, pValue));
+            return ANSC_STATUS_FAILURE;
         }
     }
     else if( strstr(ParamName, "Status") )
@@ -8187,6 +8195,7 @@ ANSC_STATUS Map_hal_dml_Interwork(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, c
         else
         {
             AnscTraceError(("%s:%d:: Invalid ParamName[%s] paramValue[%s].\n", __FUNCTION__, __LINE__, ParamName, pValue));
+            return ANSC_STATUS_FAILURE;
         }
     }
     else if( strstr(ParamName, "NetworkConnectionMode") )
@@ -8211,6 +8220,7 @@ ANSC_STATUS Map_hal_dml_Interwork(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, c
         else
         {
             AnscTraceError(("%s:%d:: Invalid ParamName[%s] paramValue[%s].\n", __FUNCTION__, __LINE__, ParamName, pValue));
+            return ANSC_STATUS_FAILURE;
         }
     }
     else if( strstr(ParamName, "UserConnectionMode") )
@@ -8231,6 +8241,7 @@ ANSC_STATUS Map_hal_dml_Interwork(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, c
         else
         {
             AnscTraceError(("%s:%d:: Invalid ParamName[%s] paramValue[%s].\n", __FUNCTION__, __LINE__, ParamName, pValue));
+            return ANSC_STATUS_FAILURE;
         }
     }
     else if( strstr(ParamName, "E164Mode") )
@@ -8263,6 +8274,7 @@ ANSC_STATUS Map_hal_dml_Interwork(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, c
         else
         {
             AnscTraceError(("%s:%d:: Invalid ParamName[%s] paramValue[%s].\n", __FUNCTION__, __LINE__, ParamName, pValue));
+            return ANSC_STATUS_FAILURE;
         }
     }
     else if( strstr(ParamName, "NetworkIPAddress") )
@@ -8458,6 +8470,7 @@ ANSC_STATUS Map_hal_dml_Interwork(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, c
             else
             {
                 AnscTraceError(("%s:%d:: Invalid ParamName[%s] paramValue[%s].\n", __FUNCTION__, __LINE__, ParamName, pValue));
+                return ANSC_STATUS_FAILURE;
             }
         }
         else if( strstr(ParamName, "LastTime") )
@@ -8479,6 +8492,7 @@ ANSC_STATUS Map_hal_dml_Interwork(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, c
             else
             {
                 AnscTraceError(("%s:%d:: Invalid ParamName[%s] paramValue[%s].\n", __FUNCTION__, __LINE__, ParamName, pValue));
+                return ANSC_STATUS_FAILURE;
             }
         }
         else if( strstr(ParamName, "NetworkConnection") )
@@ -8524,6 +8538,8 @@ ANSC_STATUS Map_hal_dml_Interwork(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, c
         AnscTraceError(("%s:%d:: Invalid index ParamName[%s]\n", __FUNCTION__, __LINE__, ParamName));
         return ANSC_STATUS_FAILURE;
     }
+
+    return ANSC_STATUS_SUCCESS;
 }
 
 
@@ -9865,7 +9881,6 @@ ANSC_STATUS Map_hal_dml_VoipProfile(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList,
 }
 ANSC_STATUS Map_hal_dml_codecProfile(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, char* ParamName, char* pValue)
 {
-    char *err;
     int hal_index = 0;
 
     if(pVoiceServiceList == NULL || ParamName == NULL || pValue == NULL)

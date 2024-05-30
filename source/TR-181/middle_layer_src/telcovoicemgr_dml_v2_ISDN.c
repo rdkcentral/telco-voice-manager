@@ -23,6 +23,7 @@
 #include "ccsp_trace.h"
 #include "ccsp_syslog.h"
 #include "telcovoicemgr_dml_hal_param_v2.h"
+#include "telcovoicemgr_dml_hal.h"
 
 /**********************************************************************
 
@@ -1131,7 +1132,7 @@ ANSC_HANDLE TelcoVoiceMgrDml_ISDN_PRIList_GetEntry(ANSC_HANDLE hInsContext, ULON
 
     PTELCOVOICEMGR_DML_VOICESERVICE pDmlVoiceService = &(pVoiceService->dml);
 
-    PDML_ISDN_BRI_LIST_T pPRIList = &(pDmlVoiceService->ISDN_obj.PRI);
+    PDML_ISDN_PRI_LIST_T pPRIList = &(pDmlVoiceService->ISDN_obj.PRI);
 
     if(pPRIList != NULL)
     {

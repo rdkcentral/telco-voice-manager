@@ -23,6 +23,7 @@
 #include "ccsp_trace.h"
 #include "ccsp_syslog.h"
 #include "telcovoicemgr_dml_hal_param_v2.h"
+#include "telcovoicemgr_dml_hal.h"
 
 #define HAL_DML_VOICESERVICE_DECT_BASE                         "Device.Services.VoiceService.%d.DECT.Base.%d."
 #define HAL_DML_VOICESERVICE_DECT_PORTABLE                     "Device.Services.VoiceService.%d.DECT.Portable.%d."

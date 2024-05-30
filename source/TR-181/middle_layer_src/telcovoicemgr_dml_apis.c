@@ -36,6 +36,14 @@
 #include <sys/types.h>
 #include "ansc_platform.h"
 
+#include "telcovoicemgr_dml_report.h"
+#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
+#include "telcovoicemgr_services_apis_v2.h"
+#endif
+
+void initparodusTask(void);
+ANSC_STATUS TelcoVoiceMgr_Controller_Init();
+
 extern char * VoiceServiceReportStatusEnable;
 extern char * VoiceServiceReportStatusDfltReportingPeriod;
 extern char * VoiceServiceReportStatusReportingPeriod;
@@ -59,7 +67,6 @@ extern char * VoiceServiceReportStatusReportingPeriod;
 
 ANSC_HANDLE TelcoVoiceMgrServicesCreate(VOID)
 {
-    ANSC_STATUS                     returnStatus = ANSC_STATUS_SUCCESS;
     PTELCOVOICEMGR_DATAMODEL_SERVICES        pMyObject    = (PTELCOVOICEMGR_DATAMODEL_SERVICES)NULL;
 
     /*
@@ -193,7 +200,6 @@ ANSC_STATUS TelcoVoiceMgrServicesInitialize(ANSC_HANDLE hThisObject)
 /* DmlVoiceServiceReportInit */
 ANSC_STATUS DmlVoiceServiceReportInit(PANSC_HANDLE phContext)
 {
-    int                               retPsmGet                        = 0;
     ULONG                             psmValue                         = 0;
     PTELCOVOICE_CONTEXT_LINK_OBJECT   pMyObject                        = (PTELCOVOICE_CONTEXT_LINK_OBJECT)phContext;
     PDML_X_RDK_REPORT_VOICE_SERVICE   pVoiceServiceReportTmp           = NULL;
@@ -308,7 +314,6 @@ TelcoVoiceMgrTelcoVoiceCreate
         VOID
     )
 {
-    ANSC_STATUS                              returnStatus = ANSC_STATUS_SUCCESS;
     PTELCOVOICEMGR_DATAMODEL_TELCOVOICE      pMyObject    = (PTELCOVOICEMGR_DATAMODEL_TELCOVOICE)NULL;
 
     /*
@@ -365,7 +370,6 @@ TelcoVoiceMgrTelcoVoiceInitialize
     )
 {
     ANSC_STATUS                           returnStatus        = ANSC_STATUS_SUCCESS;
-    PTELCOVOICEMGR_DATAMODEL_TELCOVOICE   pMyObject           = (PTELCOVOICEMGR_DATAMODEL_TELCOVOICE)hThisObject;
 
     /* Initialize WebConfig */
     TelcoVoiceMgrDmlTelcoVoiceWebConfigInit( );
@@ -424,7 +428,7 @@ TelcoVoiceMgrTelcoVoiceRemove
 
 ANSC_HANDLE TelcoVoiceMgr_getCallControlLineEnable(BOOL *bEnable)
 {
-    ANSC_HANDLE ret = ANSC_STATUS_FAILURE;
+    ANSC_HANDLE ret = NULL;
     hal_param_t req_param;
     ULONG uVsIndex = 1;
     ULONG uLineIndex = 1;
@@ -447,7 +451,7 @@ ANSC_HANDLE TelcoVoiceMgr_getCallControlLineEnable(BOOL *bEnable)
 
 ANSC_HANDLE TelcoVoiceMgr_setCallControlLineEnable(BOOL bEnable)
 {
-    ANSC_HANDLE ret = ANSC_STATUS_FAILURE;
+    ANSC_HANDLE ret = NULL;
     char HalName[MAX_STR_LEN] = {0};
     ULONG uVsIndex = 1;
     ULONG uLineIndex = 1;
@@ -477,7 +481,7 @@ ANSC_HANDLE TelcoVoiceMgr_setCallControlLineEnable(BOOL bEnable)
             goto exit;
         }
 
-        PDML_VOICE_SERVICE_CTRL_T pTVMVoiceServiceCtrl = &(pTVMVoiceServiceList->pdata[uVsIndex - 1]);
+        PDML_VOICE_SERVICE_CTRL_T pTVMVoiceServiceCtrl = pTVMVoiceServiceList->pdata[uVsIndex - 1];
         if(pTVMVoiceServiceCtrl == NULL)
         {
             CcspTraceError(("%s:%d:: pTVMVoiceServiceCtrl: Failed\n", __FUNCTION__, __LINE__));
@@ -498,7 +502,7 @@ ANSC_HANDLE TelcoVoiceMgr_setCallControlLineEnable(BOOL bEnable)
             goto exit;
         }
 
-        PDML_CALLCONTROL_LINE_CTRL_T pLineCtrl = &(pCallCtrlLineList->pdata[uLineIndex - 1]);
+        PDML_CALLCONTROL_LINE_CTRL_T pLineCtrl = pCallCtrlLineList->pdata[uLineIndex - 1];
         if(pLineCtrl == NULL)
         {
             CcspTraceError(("%s:%d:: pLineCtrl: Failed\n", __FUNCTION__, __LINE__));

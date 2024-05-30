@@ -23,6 +23,7 @@
 #include "ccsp_trace.h"
 #include "ccsp_syslog.h"
 #include "telcovoicemgr_dml_hal_param_v2.h"
+#include "telcovoicemgr_dml_hal.h"
 
 /**********************************************************************
 
@@ -1580,7 +1581,6 @@ BOOL TelcoVoiceMgrDml_CallLogList_SessionList_source_RTP_GetParamUlongValue(ANSC
 
     PDML_CALLLOG_SESSION pDmlCallLogSession = &(pCallLogSessionCtrl->dml);
 
-    PDML_CALLLOG_SESSION_RTP pHEAD = &(pDmlCallLogSession->Source.RTP);
 
     pDmlVoiceService = (PTELCOVOICEMGR_DML_VOICESERVICE)pDmlCallLogSession->pParentVoiceService;
     pDmlCallLog = (PDML_CALLLOG)pDmlCallLogSession->pParentCallLog;
@@ -1715,7 +1715,6 @@ ULONG TelcoVoiceMgrDml_CallLogList_SessionList_source_RTP_GetParamStringValue(AN
 
     PDML_CALLLOG_SESSION pDmlCallLogSession = &(pCallLogSessionCtrl->dml);
 
-    PDML_CALLLOG_SESSION_RTP pHEAD = &(pDmlCallLogSession->Source.RTP);
 
     pDmlVoiceService = (PTELCOVOICEMGR_DML_VOICESERVICE)pDmlCallLogSession->pParentVoiceService;
     pDmlCallLog = (PDML_CALLLOG)pDmlCallLogSession->pParentCallLog;
@@ -1790,7 +1789,6 @@ BOOL TelcoVoiceMgrDml_CallLogList_SessionList_source_RTP_GetParamIntValue(ANSC_H
 
     PDML_CALLLOG_SESSION pDmlCallLogSession = &(pCallLogSessionCtrl->dml);
 
-    PDML_CALLLOG_SESSION_RTP pHEAD = &(pDmlCallLogSession->Source.RTP);
 
     pDmlVoiceService = (PTELCOVOICEMGR_DML_VOICESERVICE)pDmlCallLogSession->pParentVoiceService;
     pDmlCallLog = (PDML_CALLLOG)pDmlCallLogSession->pParentCallLog;
@@ -2352,33 +2350,6 @@ ULONG TelcoVoiceMgrDml_CallLogList_SessionList_source_VoiceQuality_GetParamStrin
 
 ULONG TelcoVoiceMgrDml_CallLogList_SessionList_source_VoiceQuality_GetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG* puLong)
 {
-    BOOL ret = FALSE;
-    ULONG uVsIndex  = 0, uCallLogIndex = 0, uSessionIndex = 0;
-    PTELCOVOICEMGR_DML_VOICESERVICE pDmlVoiceService = NULL;
-    PDML_CALLLOG pDmlCallLog  = NULL;
-
-    if(ParamName == NULL || puLong == NULL)
-    {
-        CcspTraceWarning(("%s: Invalid Input Parameter [NULL]\n", __func__));
-        return ret;
-    }
-
-    TELCOVOICEMGR_LOCK_OR_EXIT()
-
-    PDML_CALLLOG_SESSION_CTRL_T pCallLogSessionCtrl = (PDML_CALLLOG_SESSION_CTRL_T)hInsContext;
-
-    PDML_CALLLOG_SESSION pDmlCallLogSession = &(pCallLogSessionCtrl->dml);
-
-    PDML_CALLLOG_SESSION_VOICEQUALITY pHEAD = &(pDmlCallLogSession->Source.VoiceQuality);
-
-    pDmlVoiceService = (PTELCOVOICEMGR_DML_VOICESERVICE)pDmlCallLogSession->pParentVoiceService;
-    pDmlCallLog = (PDML_CALLLOG)pDmlCallLogSession->pParentCallLog;
-    uVsIndex = pDmlVoiceService->InstanceNumber;
-    uCallLogIndex = pDmlCallLog->uInstanceNumber;
-    uSessionIndex = pDmlCallLogSession->uInstanceNumber;
-
-    TELCOVOICEMGR_UNLOCK()
-
     return TRUE;
 }
 
@@ -3164,7 +3135,6 @@ BOOL TelcoVoiceMgrDml_CallLogList_SessionList_Stats_GetParamUlongValue(ANSC_HAND
 
     PDML_CALLLOG_SESSION pDmlCallLogSession = &(pCallLogSessionCtrl->dml);
 
-    PDML_CALLLOG_SESSION_STATS pHEAD = &(pDmlCallLogSession->Stats);
 
     pDmlVoiceService = (PTELCOVOICEMGR_DML_VOICESERVICE)pDmlCallLogSession->pParentVoiceService;
     pDmlCallLog = (PDML_CALLLOG)pDmlCallLogSession->pParentCallLog;

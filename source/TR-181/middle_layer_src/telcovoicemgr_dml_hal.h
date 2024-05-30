@@ -144,13 +144,18 @@ ANSC_STATUS TelcoVoiceMgrHal_SetParamInt(char* HalName, INT iValue);
 ANSC_STATUS TelcoVoiceMgrHal_SetParamULong(char* HalName, ULONG uValue);
 ANSC_STATUS TelcoVoiceMgrHal_SetParamString(char* HalName, char* sValue);
 ANSC_STATUS TelcoVoiceMgrHal_SendJsonRequest(json_object *jmsg);
+ANSC_STATUS TelcoVoiceHal_GetSingleParameter(hal_param_t *get_param);
+ANSC_STATUS TelcoVoiceMgrHal_GetCallLogData(PTELCOVOICEMGR_DML_VOICESERVICE pDmlVoiceService, char* ParamName);
+ANSC_HANDLE TelcoVoiceMgrHal_AddCallCtrlOutMap(ANSC_HANDLE pVoiceService,ULONG* pInsNumber,ANSC_HANDLE CallCtrlOutMapList);
+ANSC_STATUS TelcoVoiceMgrHal_DelParam(const char *param_name);
+ANSC_HANDLE TelcoVoiceMgrHal_AddCallCtrlNumberingPlan(ANSC_HANDLE pVoiceService,ULONG* pInsNumber,ANSC_HANDLE CallCtrlNumPlanList);
+ANSC_STATUS TelcoVoiceMgrHal_SetLinkUp(ULONG uVsIndex, char *dns_server_address, char *ipAddrFamily, char *wanIpAddress);
 #ifndef FEATURE_RDKB_VOICE_DM_TR104_V2
 ANSC_STATUS TelcoVoiceMgrHal_GetCapabilities(PTELCOVOICEMGR_DML_CAPABILITIES pCapabilities);
 ANSC_STATUS TelcoVoiceMgrHal_GetVoiceProfile(DML_PROFILE_LIST_T* pVoiceProfileList, int vsIndex);
 ANSC_STATUS TelcoVoiceMgrHal_GetPhyInterface(DML_PHYINTERFACE_LIST_T* pPhyInterfaceList, int vsIndex);
-ANSC_STATUS TelcoVoiceMgrHal_DelParam(const char *param_name);
-ANSC_HANDLE TelcoVoiceMgrHal_AddCallCtrlOutMap(ANSC_HANDLE pVoiceService,ULONG* pInsNumber,ANSC_HANDLE CallCtrlOutMapList);
-ANSC_HANDLE TelcoVoiceMgrHal_AddCallCtrlNumberingPlan(ANSC_HANDLE pVoiceService,ULONG* pInsNumber,ANSC_HANDLE CallCtrlNumPlanList);
+#else
+ANSC_STATUS TelcoVoiceHal_GetCallLogStats(const char *param_name, TELCOVOICEMGR_DML_VOICESERVICE_CALLLOG_STATS *pCallLogStats);
 #endif
 ANSC_STATUS TelcoVoiceHal_GetLineStats(const char *param_name, TELCOVOICEMGR_DML_VOICESERVICE_STATS *pLineStats);
 ANSC_STATUS TelcoVoiceMgrHal_GetInitData(void);

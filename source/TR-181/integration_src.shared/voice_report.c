@@ -28,6 +28,13 @@
 #include "voice_report.h"
 #include "ccsp_trace.h"
 
+size_t b64_get_encoded_buffer_size( const size_t decoded_size );
+void b64_encode( const uint8_t *input, const size_t input_size, uint8_t *output );
+
+
+#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
+#include "telcovoicemgr_services_apis_v2.h"
+#endif
 char *rt_schema_buffer = NULL;
 
 static BOOL VoiceServiceReportStatus = FALSE;
@@ -165,12 +172,12 @@ static ANSC_STATUS VoiceServicePrepareReportData(int iVoiceServiceID, VoiceServi
     TELCOVOICEMGR_DML_VOICESERVICE_STATS  stStats = { 0 };
 #ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
     TELCOVOICEMGR_DML_VOICESERVICE_CALLLOG_STATS  stCallLogStats = { 0 };
+#else
+    char *err;
 #endif
     VoiceProfile *pstVoiceProfile = NULL;
-    int rc = ANSC_STATUS_SUCCESS, iCommonEnumRet = 0;
-    unsigned int i, j, voice_profile_id = 0, line_id = 0, phy_interface_id = 0;
-    ULONG ulCommonRet = 0;
-    char *err;
+    unsigned int i, j, voice_profile_id = 0, line_id = 0;
+    UINT ulCommonRet = 0, iCommonEnumRet = 0;
 
     hal_param_t req_param;
     memset(&req_param, 0, sizeof(req_param));
@@ -1866,7 +1873,7 @@ int TelcoVoiceMgr_getCountLines()
 
 static int PrepareAndSendVoiceServiceReport(void)
 {
-    int ret = 0, tmpActiveServicesList[TELCOVOICEMGR_DML_NUMBER_OF_VOICE_SERVICES] = { 0 }, iCommonEnumRet;
+    int ret = 0, tmpActiveServicesList[TELCOVOICEMGR_DML_NUMBER_OF_VOICE_SERVICES] = { 0 };
     unsigned int uiTotalVoiceServices = 0, uiTotalActiveVoiceServices = 0;
 
     /* Note: voice HAL instance startes from 1 */
@@ -2252,7 +2259,7 @@ void macToLower(char macValue[])
 char *getDeviceMac()
 {
     char server_ip[16] = {0};
-    int rc,fd = 0,server_port;
+    int fd = 0,server_port;
     unsigned int token;
 
     CcspTraceInfo((" VOICE REPORT %s ENTER\n", __FUNCTION__));
@@ -2275,7 +2282,7 @@ char *getDeviceMac()
             break;
         }
 
-        if (CCSP_SUCCESS == sysevent_get(fd, token, "eth_wan_mac", deviceMACValue, sizeof(deviceMACValue)) == 0 && deviceMACValue[0] != '\0')
+        if (CCSP_SUCCESS == sysevent_get(fd, token, "eth_wan_mac", deviceMACValue, sizeof(deviceMACValue)) && deviceMACValue[0] != '\0')
         {
             pthread_mutex_lock(&device_mac_mutex);
             macToLower(deviceMACValue);

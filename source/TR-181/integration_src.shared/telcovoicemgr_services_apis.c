@@ -28,6 +28,9 @@
 #include "ccsp_message_bus.h"
 #include "ccsp_base_api.h"
 #include "telcovoicemgr_dml_json_cfg_init.h"
+#include <ctype.h>
+#include <syscfg.h>
+#include <telcovoicemgr_dml_hal.h>
 #ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
 #include "telcovoicemgr_services_apis_v2.h"
 #else
@@ -99,10 +102,13 @@
 extern int sysevent_voice_fd;
 extern token_t sysevent_voice_token;
 extern ANSC_HANDLE bus_handle;
+#ifndef FEATURE_RDKB_VOICE_DM_TR104_V2
 static char *bTrueStr = "true", *bFalseStr = "false";
+#endif
 static TELCOVOICEMGR_VOICE_IP_LINK_STATE gLinkState = VOICE_HAL_IP_LINK_STATE_DOWN;
 
 static ANSC_STATUS TelcoVoiceMgrDmlGetDnsServers(char *dns_server_address);
+ANSC_STATUS voice_process_factory_default(void);
 
 /***************************************************************************
  * @brief API used to check the incoming ip address is a valid one
@@ -343,7 +349,6 @@ static ANSC_STATUS generate_voice_firewall_sysevent_string(char* firewallData,
     uint16_t dscpLen = 0;
     uint16_t pinholeLen = 0;
     uint16_t outbtLen = 0;
-    uint16_t len = 0;
     unsigned long uPort = 0;
     char tempAddr[IP_ADDR_LENGTH] = {0};
 
@@ -630,7 +635,6 @@ static ANSC_STATUS TelcoVoiceMgrDmlGetTableEntryNames(
                                  char *pTableName, int maxRecords, char aRecordNameList[][256],
                                                               int *pNumRecords)
 {
-    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
     parameterInfoStruct_t **retInfo = NULL;
     int ret = 0, nval = 0;
     int iLoopCount;
@@ -743,7 +747,6 @@ static ANSC_STATUS TelcoVoiceMgrDmlGetWanMarkingRecordNames(char *pWanIfEntryNam
 */
 static ANSC_STATUS TelcoVoiceMgrDmlGetParamValue(char *pComponent, char *pBus, char *pParamName, char *pReturnVal)
 {
-    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
     parameterValStruct_t **retVal = NULL;
     char *ParamName[1];
     int ret = 0, nval = 0;
@@ -1078,14 +1081,11 @@ static ANSC_STATUS TelcoVoiceMgrDmlSetMarkingEthPriorityMark(char *pIfRecordName
 ANSC_STATUS TelcoVoiceMgrDmlIterateEnabledInterfaces(ANSC_STATUS (*pAction)(char *aIfRecordName, void *), void *pActionArgs)
 {
     char aIfRecordNameList[MAX_INTERFACES][256] = {0};
-    char aIfUpdateList[MAX_INTERFACES][256] = {0};
-    char aUpdatedEntryName[256] = {0};
 
     int numIfRecords = 0;
     int iLoopCount = 0;
     char paramName[512] = {0};
     char aParamValue[256] = {0};
-    uint uUpdateCount = 0;
 
     if(ANSC_STATUS_SUCCESS == TelcoVoiceMgrDmlGetWanInterfaceRecordNames
                                                  (aIfRecordNameList, &numIfRecords))
@@ -1137,9 +1137,6 @@ static ANSC_STATUS TelcoVoiceMgrDmlGetMarkingEthPriorityMark(char *pIfRecordName
     char aAliasValue[16] = {0};
     char aMrkRecordList[MAX_MARK_ENTRY][256] = {0};
     int numMarkingRecords = 0;
-    int iNewInstanceNumber = -1;
-
-    char aEthPriority[4] = {0};
 
     if(!pArgs || !pIfRecordName)
     {
@@ -1826,8 +1823,6 @@ ANSC_STATUS TelcoVoiceMgrDmlSetLogServerPort(uint32_t uiService, ULONG uLSPort)
 
 ANSC_STATUS TelcoVoiceMgrDmlSetLinkState(TELCOVOICEMGR_VOICE_IP_LINK_STATE linkState, char *ipAddrFamily, char *wanIpAddress)
 {
-    char strValue[JSON_MAX_VAL_ARR_SIZE]={0};
-    char strName[JSON_MAX_STR_ARR_SIZE]={0};
     char dns_server_address[BUF_LEN_256]={0};
     ULONG uVsIndex = 0;
     PTELCOVOICEMGR_DML_VOICESERVICE       pDmlVoiceService    = NULL;
@@ -1857,7 +1852,7 @@ ANSC_STATUS TelcoVoiceMgrDmlSetLinkState(TELCOVOICEMGR_VOICE_IP_LINK_STATE linkS
     if(linkState == VOICE_HAL_IP_LINK_STATE_UP)
     {
         //Send Dns Server Address to voice stack
-        TelcoVoiceMgrDmlGetDnsServers(&dns_server_address);
+        TelcoVoiceMgrDmlGetDnsServers(dns_server_address);
         if (TelcoVoiceMgrHal_SetLinkUp(uVsIndex, dns_server_address, ipAddrFamily, wanIpAddress) != ANSC_STATUS_SUCCESS)
         {
             CcspTraceError(("%s:%d::  Failed\n", __FUNCTION__, __LINE__));
@@ -2072,6 +2067,36 @@ ANSC_STATUS TelcoVoiceMgrDmlFactoryReset(uint32_t uiService, TELCOVOICEMGR_VOICE
 
     return ANSC_STATUS_SUCCESS;
 }
+
+#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
+/* TelcoVoiceMgrDmlSetTimeOffset: */
+/**
+* @description set time offset based on time zone
+*
+* @param uint32_t uiService - input the voice service index
+* @param time_t uiOffset    - time offset value in seconds
+*
+* @return The status of the operation.
+* @retval ANSC_STATUS_SUCCESS if successful.
+* @retval ANSC_STATUS_FAILURE if any error is detected
+*
+* @execution Synchronous.
+* @sideeffect None.
+*
+*/
+ANSC_STATUS TelcoVoiceMgrDmlSetTimeOffset(uint32_t uiService, time_t uiOffset)
+{
+    char strName[JSON_MAX_STR_ARR_SIZE]={0};
+
+    snprintf(strName,JSON_MAX_STR_ARR_SIZE,VOICE_SERVICE_TABLE_NAME"%s",uiService,"X_RDK_TimeOffset");
+
+    if (TelcoVoiceMgrHal_SetParamULong(strName, uiOffset) != ANSC_STATUS_SUCCESS)
+    {
+       return ANSC_STATUS_FAILURE;
+    }
+    return ANSC_STATUS_SUCCESS;
+}
+#endif
 
 /* TelcoVoiceMgrDmlSetVoiceProcessState: */
 /**
@@ -3016,7 +3041,7 @@ ANSC_STATUS TelcoVoiceMgrDmlSetX_RDK_FirewallRuleData(char * FirewallRuleData, U
     static uint prevRtpSkbMark = 0;
     ULONG  uVpIndex = 0;
     static TELCOVOICEMGR_VOICE_IP_ADD_FAMILY previpAddressFamily = VOICE_HAL_AF_INET_V4;
-    uint sipSkbMark, rtpSkbMark, sipDscpMark, rtpDscpMark;
+    uint sipSkbMark = 0, rtpSkbMark = 0, sipDscpMark = 0, rtpDscpMark = 0;
 
     if(!FirewallRuleData)
     {
@@ -3700,13 +3725,10 @@ ANSC_STATUS TelcoVoiceMgrDmlGetEthernetPriorityMark(uint32_t uiService, uint32_t
             break;
         case RTP:
 #ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
-            if(pDmlVoiceProfile->RTP.EthernetPriorityMark != NULL)
-            {
                 CcspTraceWarning(("%s:%d:: Rtp Ethernet Priority (DML): %d\n", __FUNCTION__, __LINE__, pDmlVoiceProfile->RTP.EthernetPriorityMark));
                 *pValue = pDmlVoiceProfile->RTP.EthernetPriorityMark;
                 returnStatus = ANSC_STATUS_SUCCESS;
                 goto EXIT;
-            }
 #else
             pDmlRtpObj = &(pDmlVoiceProfile->RTPObj);
             if(pDmlRtpObj != NULL)
@@ -3716,7 +3738,6 @@ ANSC_STATUS TelcoVoiceMgrDmlGetEthernetPriorityMark(uint32_t uiService, uint32_t
                 returnStatus = ANSC_STATUS_SUCCESS;
                 goto EXIT;
             }
-#endif
             else
             {
                 CcspTraceWarning(("%s:%d:: Rtp Ethernet Priority: NULL\n", __FUNCTION__, __LINE__));
@@ -3724,6 +3745,7 @@ ANSC_STATUS TelcoVoiceMgrDmlGetEthernetPriorityMark(uint32_t uiService, uint32_t
                 goto EXIT;
             }
             break;
+#endif
         default:
             CcspTraceWarning(("%s:%d:: Invalid protocol\n", __FUNCTION__, __LINE__));
             returnStatus = ANSC_STATUS_FAILURE;
