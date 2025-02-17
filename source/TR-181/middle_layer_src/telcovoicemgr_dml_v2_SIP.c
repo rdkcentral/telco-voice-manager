@@ -3366,6 +3366,11 @@ ULONG TelcoVoiceMgrDml_SIP_NetworkList_GetParamStringValue(ANSC_HANDLE hInsConte
         AnscCopyString(pValue,pHEAD->X_RDK_Central_COM_ConferencingURI);
         ret = 0;
     }
+    else if (strcmp(ParamName, "X_RDK_ConferencingOption") == 0)
+    {
+        AnscCopyString(pValue,pHEAD->X_RDK_ConferencingOption);
+        ret = 0;
+    }
     else if (strcmp(ParamName, "VoIPProfile") == 0)
     {
         AnscCopyString(pValue,pHEAD->VoIPProfile);
@@ -3549,6 +3554,21 @@ BOOL TelcoVoiceMgrDml_SIP_NetworkList_SetParamStringValue(ANSC_HANDLE hInsContex
             TELCOVOICEMGR_LOCK_OR_EXIT()
 
             AnscCopyString(pHEAD->X_RDK_Central_COM_ConferencingURI,pString);
+
+            TELCOVOICEMGR_UNLOCK()
+
+            ret = TRUE;
+        }
+    }
+    else if (strcmp(ParamName, "X_RDK_ConferencingOption") == 0)
+    {
+        snprintf(HalName, MAX_STR_LEN, "Device.Services.VoiceService.%d.SIP.Network.%d.X_RDK_ConferencingOption",uVsIndex,uNetworkIndex);
+
+        if (TelcoVoiceMgrHal_SetParamString(HalName,pString) == ANSC_STATUS_SUCCESS)
+        {
+            TELCOVOICEMGR_LOCK_OR_EXIT()
+
+            AnscCopyString(pHEAD->X_RDK_ConferencingOption,pString);
 
             TELCOVOICEMGR_UNLOCK()
 
@@ -3991,6 +4011,22 @@ BOOL TelcoVoiceMgrDml_SIP_NetworkList_GetParamBoolValue(ANSC_HANDLE hInsContext,
         *pBool = pHEAD->X_RDK_PRACKRequired;
         ret = TRUE;
     }
+    else if (strcmp(ParamName, "X_RDK_SipSubscribeEnable") == 0)
+    {
+        *pBool = pHEAD->X_RDK_SipSubscribeEnable;
+        ret = TRUE;
+    }
+    else if (strcmp(ParamName, "X_RDK_SessionRefreshForceSelectedMethod") == 0)
+    {
+        ret = TRUE;
+        *pBool = pHEAD->X_RDK_SessionRefreshForceSelectedMethod;
+        ret = TRUE;
+    }
+    else if (strcmp(ParamName, "X_RDK_SessionRefreshRequestUseUpdate") == 0)
+    {
+        *pBool = pHEAD->X_RDK_SessionRefreshRequestUseUpdate;
+        ret = TRUE;
+    }
     else if (strcmp(ParamName, "X_RDK-Central_COM_NetworkDisconnect") == 0)
     {
         *pBool = pHEAD->X_RDK_Central_COM_NetworkDisconnect;
@@ -4107,6 +4143,51 @@ BOOL TelcoVoiceMgrDml_SIP_NetworkList_SetParamBoolValue(ANSC_HANDLE hInsContext,
             TELCOVOICEMGR_LOCK_OR_EXIT()
 
             pHEAD->X_RDK_PRACKRequired = bValue;
+
+            TELCOVOICEMGR_UNLOCK()
+
+            ret = TRUE;
+        }
+    }
+    else if (strcmp(ParamName, "X_RDK_SipSubscribeEnable") == 0)
+    {
+        snprintf(HalName, MAX_STR_LEN, "Device.Services.VoiceService.%d.SIP.Network.%d.X_RDK_SipSubscribeEnable",uVsIndex,uNetworkIndex);
+
+        if (TelcoVoiceMgrHal_SetParamBool(HalName,bValue) == ANSC_STATUS_SUCCESS)
+        {
+            TELCOVOICEMGR_LOCK_OR_EXIT()
+
+            pHEAD->X_RDK_SipSubscribeEnable = bValue;
+
+            TELCOVOICEMGR_UNLOCK()
+
+            ret = TRUE;
+        }
+    }
+    else if (strcmp(ParamName, "X_RDK_SessionRefreshForceSelectedMethod") == 0)
+    {
+        snprintf(HalName, MAX_STR_LEN, "Device.Services.VoiceService.%d.SIP.Network.%d.X_RDK_SessionRefreshForceSelectedMethod",uVsIndex,uNetworkIndex);
+
+        if (TelcoVoiceMgrHal_SetParamBool(HalName,bValue) == ANSC_STATUS_SUCCESS)
+        {
+            TELCOVOICEMGR_LOCK_OR_EXIT()
+
+            pHEAD->X_RDK_SessionRefreshForceSelectedMethod = bValue;
+
+            TELCOVOICEMGR_UNLOCK()
+
+            ret = TRUE;
+        }
+    }
+    else if (strcmp(ParamName, "X_RDK_SessionRefreshRequestUseUpdate") == 0)
+    {
+        snprintf(HalName, MAX_STR_LEN, "Device.Services.VoiceService.%d.SIP.Network.%d.X_RDK_SessionRefreshRequestUseUpdate",uVsIndex,uNetworkIndex);
+
+        if (TelcoVoiceMgrHal_SetParamBool(HalName,bValue) == ANSC_STATUS_SUCCESS)
+        {
+            TELCOVOICEMGR_LOCK_OR_EXIT()
+
+            pHEAD->X_RDK_SessionRefreshRequestUseUpdate = bValue;
 
             TELCOVOICEMGR_UNLOCK()
 

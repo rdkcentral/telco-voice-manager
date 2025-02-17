@@ -1410,6 +1410,10 @@ typedef  struct _DML_SIP_NETWORK
     BOOL                                    X_RDK_Central_COM_NetworkDisconnect;
     CHAR                                    X_RDK_Central_COM_ConferencingURI[STR_LEN_256];
     BOOL                                    X_RDK_PRACKRequired;
+    CHAR                                    X_RDK_ConferencingOption[STR_LEN_256];
+    BOOL                                    X_RDK_SipSubscribeEnable;
+    BOOL                                    X_RDK_SessionRefreshForceSelectedMethod;
+    BOOL                                    X_RDK_SessionRefreshRequestUseUpdate;
     DML_SIP_NETWORK_FQDNSERVER_LIST_T       FQDNServer;
     DML_SIP_NETWORK_EVENTSUBSCRIBE_LIST_T   EventSubscribe;
     DML_SIP_NETWORK_RESPMAP_LIST_T          ResponseMap;

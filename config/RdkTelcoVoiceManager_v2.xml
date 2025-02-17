@@ -2155,6 +2155,31 @@
                         <restrictedChars>&lt;&gt;%`|'</restrictedChars>
                     </parameter>
                     <parameter>
+                        <name>X_RDK_ConferencingOption</name>
+                        <type>string</type>
+                        <syntax>string</syntax>
+                        <writable>true</writable>
+                        <restrictedChars>&lt;&gt;%`|'</restrictedChars>
+                    </parameter>
+                    <parameter>
+                        <name>X_RDK_SipSubscribeEnable</name>
+                        <type>boolean</type>
+                        <syntax>bool</syntax>
+                        <writable>true</writable>
+                    </parameter>
+                    <parameter>
+                        <name>X_RDK_SessionRefreshForceSelectedMethod</name>
+                        <type>boolean</type>
+                        <syntax>bool</syntax>
+                        <writable>true</writable>
+                    </parameter>
+                    <parameter>
+                        <name>X_RDK_SessionRefreshRequestUseUpdate</name>
+                        <type>boolean</type>
+                        <syntax>bool</syntax>
+                        <writable>true</writable>
+                    </parameter>
+                    <parameter>
                         <name>X_RDK-Central_COM_NetworkDisconnect</name>
                         <type>boolean</type>
                         <syntax>bool</syntax>
