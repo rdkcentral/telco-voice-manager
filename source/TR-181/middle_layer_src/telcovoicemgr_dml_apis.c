@@ -22,10 +22,10 @@
 #include "telcovoicemgr_dml_backendmgr.h"
 #include "telcovoicemgr_dml_hal.h"
 #include "voice_report.h"
-#if defined(RBUS_BUILD_FLAG_ENABLE) || defined(_HUB4_PRODUCT_REQ_)
+#ifdef RBUS_BUILD_FLAG_ENABLE
 #include "telcovoicemgr_rbus_handler_apis.h"
 #include "telcovoicemgr_dml_json_cfg_init.h"
-#endif // RBUS_BUILD_FLAG_ENABLE _HUB4_PRODUCT_REQ_
+#endif // RBUS_BUILD_FLAG_ENABLE
 
 #include <stdio.h>
 #include <unistd.h>
@@ -181,7 +181,7 @@ ANSC_STATUS TelcoVoiceMgrServicesInitialize(ANSC_HANDLE hThisObject)
         CcspTraceError(("DmlVoiceServiceReportInit failed !!!!\n"));
         return returnStatus;
     }
-#if defined(RBUS_BUILD_FLAG_ENABLE) || defined(_HUB4_PRODUCT_REQ_)
+#ifdef RBUS_BUILD_FLAG_ENABLE
     //Starts the Rbus Initialize
     returnStatus = TelcoVoiceMgr_Rbus_Init();
     if(returnStatus == ANSC_STATUS_SUCCESS)
@@ -192,7 +192,7 @@ ANSC_STATUS TelcoVoiceMgrServicesInitialize(ANSC_HANDLE hThisObject)
     {
         CcspTraceError(("%s %d - Rbus Init failed !\n", __FUNCTION__, __LINE__ ));
     }
-#endif // RBUS_BUILD_FLAG_ENABLE _HUB4_PRODUCT_REQ_
+#endif // RBUS_BUILD_FLAG_ENABLE
 
     return returnStatus;
 }
@@ -409,14 +409,14 @@ TelcoVoiceMgrTelcoVoiceRemove
 {
     ANSC_STATUS                           returnStatus        = ANSC_STATUS_SUCCESS;
     PTELCOVOICEMGR_DATAMODEL_TELCOVOICE   pMyObject           = (PTELCOVOICEMGR_DATAMODEL_TELCOVOICE)hThisObject;
-#if defined(RBUS_BUILD_FLAG_ENABLE) || defined(_HUB4_PRODUCT_REQ_)
+#ifdef RBUS_BUILD_FLAG_ENABLE
     //Starts the Rbus Initialize
     returnStatus = TelcoVoiceMgr_RbusExit();
     if(returnStatus != ANSC_STATUS_SUCCESS)
     {
         CcspTraceError(("%s %d - Rbus Init failed !\n", __FUNCTION__, __LINE__ ));
     }
-#endif // RBUS_BUILD_FLAG_ENABLE _HUB4_PRODUCT_REQ_
+#endif // RBUS_BUILD_FLAG_ENABLE
 
     /* Remove self */
     AnscFreeMemory((ANSC_HANDLE)pMyObject);

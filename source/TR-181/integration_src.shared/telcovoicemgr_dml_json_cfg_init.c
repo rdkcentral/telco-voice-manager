@@ -73,6 +73,7 @@ static void fcopy(char *src, char *dst);
 
 static int32_t voiceHalInitDmDefaults(void);
 int platform_hal_GetRouterRegion(char *pValue);
+static int32_t TelcoVoiceMgrGetDefaultVoiceConfigFilePath(char *fileName);
 static int32_t jsonCfgSetAuthCredentials
     (
         uint32_t                service,
@@ -126,39 +127,16 @@ int32_t TelcoVoiceJsonCfgSetDmDefaults(void)
     if (-1 == ret)
     {
         /* Copy telcovoip_config_default.json to telcovoice_config_current.json */
-
         char filename[MAX_FILENAME_LENGTH] = {0};
-#ifdef _SKY_HUB_COMMON_PRODUCT_REQ_
         char region[MAX_REGION_LENGTH] = {0};
-        if(platform_hal_GetRouterRegion(region) == RETURN_OK)
+        if(TelcoVoiceMgrGetDefaultVoiceConfigFilePath(gVOICE_CONFIG_DEFAULT_NAME) == RETURN_OK)
         {
-            if(0 == strncmp(region,"IT",2))
-            {
-                snprintf(gVOICE_CONFIG_DEFAULT_NAME, MAX_FILENAME_LENGTH, VOICE_CONFIG_DEFAULT_ITA_NAME);
-            }
-            else if(0 == strncmp(region,"GB",2))
-            {
-                snprintf(gVOICE_CONFIG_DEFAULT_NAME, MAX_FILENAME_LENGTH, VOICE_CONFIG_DEFAULT_UK_NAME);
-            }
-            else if(0 == strncmp(region,"ROI",3))
-            {
-                snprintf(gVOICE_CONFIG_DEFAULT_NAME, MAX_FILENAME_LENGTH, VOICE_CONFIG_DEFAULT_ROI_NAME);
-            }
-            else
-            {
-                CcspTraceError(("Unknown Region %s\n",region));
-                snprintf(gVOICE_CONFIG_DEFAULT_NAME, MAX_FILENAME_LENGTH, VOICE_CONFIG_DEFAULT_NAME);
-            }
+            snprintf(filename, MAX_FILENAME_LENGTH, "%s%s", VOICE_CONFIG_DEFAULT_PATH,gVOICE_CONFIG_DEFAULT_NAME);
         }
         else
         {
-            CcspTraceError(("platform_hal_GetRouterRegion - Failed\n"));
-            return ANSC_STATUS_FAILURE;
+            snprintf(filename, MAX_FILENAME_LENGTH, "%s%s", VOICE_CONFIG_DEFAULT_PATH,VOICE_CONFIG_DEFAULT_NAME);
         }
-#else
-        snprintf(gVOICE_CONFIG_DEFAULT_NAME, MAX_FILENAME_LENGTH, VOICE_CONFIG_DEFAULT_NAME);
-#endif
-        snprintf(filename, MAX_FILENAME_LENGTH, "%s%s", VOICE_CONFIG_DEFAULT_PATH,gVOICE_CONFIG_DEFAULT_NAME);
 
         CcspTraceInfo(("copying %s to %s\n",
             filename, VOICE_CONFIG_CURRENT_PATH VOICE_CONFIG_CURRENT_NAME));
@@ -618,6 +596,38 @@ void parseAndSetJsonCfg(cJSON *item,char*prefix)
     return ;
 }
 #endif
+
+static int32_t TelcoVoiceMgrGetDefaultVoiceConfigFilePath(char *fileName)
+{
+    char *pBuffer = NULL;
+
+    if(fileName == NULL)
+    {
+        CcspTraceError(("[%s]::[%d] Failed: Null parameter\n", __FUNCTION__, __LINE__));
+        return ANSC_STATUS_FAILURE;
+    }
+
+    pBuffer = malloc(JSON_MAX_STR_ARR_SIZE);
+    if(pBuffer == NULL)
+    {
+        CcspTraceError(("[%s]::[%d] Failed to allocate memory\n", __FUNCTION__, __LINE__));
+        return ANSC_STATUS_FAILURE;
+    }
+
+    memset(pBuffer, 0, JSON_MAX_STR_ARR_SIZE);
+    if (syscfg_get( NULL, "Default_VoIP_Configuration_FileName", pBuffer, JSON_MAX_STR_ARR_SIZE) != 0 )
+    {
+        CcspTraceError(("[%s]::[%d] Failed to get Default_VoIP_Configuration_FileName value from syscfg\n", __FUNCTION__, __LINE__));
+        free(pBuffer);
+        return ANSC_STATUS_FAILURE;
+    }
+
+    strncpy(fileName, pBuffer, MAX_FILENAME_LENGTH -1);
+    free(pBuffer);
+
+    return ANSC_STATUS_SUCCESS;
+}
+
 /* voiceHalInitDmDefaults: */
 /**
 * @description Sets the initial value of DM configuration items in the voiceApp.

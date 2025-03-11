@@ -1596,11 +1596,7 @@ uint32_t checksum(const uint8_t *pdata, uint32_t size)
     {
         crc = (crc >> 8) ^ Crc32_table[(crc ^ *pdata++) & 0xff];
     }
-#ifndef HUB4_SDK_L07
-    return crc ^ CRC32_INIT_VALUE;
-#else
     return crc;
-#endif
 }
 
 /* writeChecksumFile: */

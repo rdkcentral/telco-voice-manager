@@ -69,9 +69,6 @@
 
 
 #include "webconfig_framework.h"
-#ifdef _HUB4_PRODUCT_REQ_
-#include "telcovoicemgr_rbus_handler_apis.h"
-#endif
 #ifdef INCLUDE_BREAKPAD
 const int kExceptSig[] = {
   SIGSEGV, SIGABRT, SIGFPE, SIGILL, SIGBUS, SIGTRAP
@@ -86,50 +83,6 @@ extern char* pComponentName;
 char g_Subsystem[32]         = {0};
 extern ANSC_HANDLE bus_handle;
 bool     bTelcoVoiceManagerRunning = TRUE;
-
-#ifdef _HUB4_PRODUCT_REQ_
-typedef struct
-{
-    char binaryLocation[64];
-    char rbusName[64];
-}Rbus_Module;
-
-int IsFileExists(char *file_name)
-{
-    struct stat file;
-
-    return (stat(file_name, &file));
-}
-
-static void waitUntilSystemReady()
-{
-    int wait_time = 0;
-    char pModule[1024] = {0};
-    Rbus_Module pModuleNames[] = {{"/usr/bin/PsmSsp",    "rbusPsmSsp"},
-                                  {"/usr/bin/CcspPandMSsp",  "CcspPandMSsp"}};
-
-    int elementCnt = ARRAY_SZ(pModuleNames);
-    for(int i=0; i<elementCnt;i++)
-    {
-        if (IsFileExists(pModuleNames[i].binaryLocation) == 0)
-        {
-            strcat(pModule,pModuleNames[i].rbusName);
-            strcat(pModule," ");
-        }
-    }
-
-    /* Check RBUS is ready. This needs to be continued upto 3 mins (180s) */
-    while(wait_time <= 90)
-    {
-        if(TelcoVoiceMgr_Rbus_discover_components(pModule)){
-            break;
-        }
-
-        wait_time++;
-        sleep(2);
-    }
-}
-#endif
 
 int  cmd_dispatch(int  command)
 {
@@ -456,9 +409,6 @@ int main(int argc, char* argv[])
 
     CcspTraceInfo(("RDKB_SYSTEM_BOOT_UP_LOG : TelcoVoiceMgr Initialized Successfully\n"));
 
-#ifdef _HUB4_PRODUCT_REQ_
-    waitUntilSystemReady();
-#endif
     if ( bRunAsDaemon )
     {
         while(1)

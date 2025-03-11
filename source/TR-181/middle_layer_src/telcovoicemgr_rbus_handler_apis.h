@@ -35,7 +35,7 @@
 
 #ifndef _TELCOVOICEMGR_RBUS_H_
 #define _TELCOVOICEMGR_RBUS_H_
-#if defined(RBUS_BUILD_FLAG_ENABLE) || defined(_HUB4_PRODUCT_REQ_)
+#ifdef RBUS_BUILD_FLAG_ENABLE
 #include "ansc_platform.h"
 
 #define WANMGR_CONFIG_WAN_INTERFACEAVAILABLESTATUS   "Device.X_RDK_WanManager.InterfaceAvailableStatus"
@@ -48,9 +48,6 @@ ANSC_STATUS TelcoVoiceMgr_Rbus_Exit();
 void TelcoVoiceMgr_Rbus_SubscribeDML(void);
 void TelcoVoiceMgr_Rbus_UnSubscribeDML(void);
 ANSC_STATUS TelcoVoiceMgr_RbusExit();
-#endif // RBUS_BUILD_FLAG_ENABLE _HUB4_PRODUCT_REQ_
+#endif // RBUS_BUILD_FLAG_ENABLE
 
-#ifdef _HUB4_PRODUCT_REQ_
-BOOL TelcoVoiceMgr_Rbus_discover_components(char const *pModuleList);
-#endif //_HUB4_PRODUCT_REQ_
 #endif
