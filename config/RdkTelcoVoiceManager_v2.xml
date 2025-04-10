@@ -2191,6 +2191,18 @@
                         <syntax>bool</syntax>
                         <writable>true</writable>
                     </parameter>
+                    <parameter>
+                        <name>X_RDK_MinSessionExpires</name>
+                        <type>unsignedInt</type>
+                        <syntax>uint32</syntax>
+                        <writable>true</writable>
+                    </parameter>
+                    <parameter>
+                        <name>X_RDK_SessionExpires</name>
+                        <type>unsignedInt</type>
+                        <syntax>uint32</syntax>
+                        <writable>true</writable>
+                    </parameter>
                </parameters>
                <objects>
                <object>

@@ -4297,6 +4297,16 @@ ANSC_STATUS Map_hal_dml_SIP(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, char* P
                 pSipNetwork->X_RDK_PRACKRequired = false;
             }
         }
+        else if( strstr(ParamName, "X_RDK_MinSessionExpires"))
+        {
+            //VoiceService.{i}.SIP.Network.{i}.X_RDK_MinSessionExpires
+            pSipNetwork->X_RDK_MinSessionExpires = strtoul(pValue,&err,10);
+        }
+        else if( strstr(ParamName, "X_RDK_SessionExpires"))
+        {
+            //VoiceService.{i}.SIP.Network.{i}.X_RDK_SessionExpires
+            pSipNetwork->X_RDK_SessionExpires = strtoul(pValue,&err,10);
+        }
         else if( strstr(ParamName, "FQDNServer") )
         {
             //VoiceService.{i}.SIP.Network.{i}.FQDNServer.{i}.
