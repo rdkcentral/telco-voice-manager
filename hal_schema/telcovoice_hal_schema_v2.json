@@ -992,6 +992,10 @@
         { "$ref": "#/definitions/voiceServiceSIPNetworkQuiescentMode" },
         { "$ref": "#/definitions/voiceServiceSIPNetworkServerDomain" },
         { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK-Central_COM_NetworkDisconnect" },
+        { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_ConferencingOption"},
+        { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_SipSubscribeEnable"},
+        { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_SessionRefreshForceSelectedMethod"},
+        { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_SessionRefreshRequestUseUpdate"},
         { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_PRACKRequired" },
         { "$ref": "#/definitions/voiceServiceSIPNetworkVoIPProfile" },
         { "$ref": "#/definitions/voiceServiceSIPNetworkMaxSessions" },
@@ -1338,6 +1342,10 @@
         { "$ref": "#/definitions/voiceServiceSIPNetworkOutboundProxyPrecedence" },
         { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_SKBMark" },
         { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK-Central_COM_NetworkDisconnect" },
+        { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_ConferencingOption"},
+        { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_SipSubscribeEnable"},
+        { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_SessionRefreshForceSelectedMethod"},
+        { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_SessionRefreshRequestUseUpdate"},
         { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_PRACKRequired" },
         { "$ref": "#/definitions/voiceServiceSIPNetworkVoIPProfile" },
         { "$ref": "#/definitions/voiceServiceSIPNetworkMaxSessions" },
@@ -6818,6 +6826,78 @@
         "value": {
           "type": "string",
           "maxLength": 256
+        }
+      }
+    },
+    "voiceServiceSIPNetworkX_RDK_ConferencingOption": {
+      "description": "Conferencing server URI.Access = Read-Write",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^Device\\.Services\\.VoiceService\\.\\d+\\.SIP\\.Network\\.\\d+\\.X_RDK_ConferencingOption$"
+        },
+        "type": {
+          "type": "string",
+          "const": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "voiceServiceSIPNetworkX_RDK_SipSubscribeEnable": {
+      "description": "Conferencing server URI.Access = Read-Write",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^Device\\.Services\\.VoiceService\\.\\d+\\.SIP\\.Network\\.\\d+\\.X_RDK_SipSubscribeEnable$"
+        },
+        "type": {
+          "type": "string",
+          "const": "boolean"
+        },
+        "value": {
+          "type": "boolean"
+        }
+      }
+    },
+    "voiceServiceSIPNetworkX_RDK_SessionRefreshForceSelectedMethod": {
+      "description": "Conferencing server URI.Access = Read-Write",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^Device\\.Services\\.VoiceService\\.\\d+\\.SIP\\.Network\\.\\d+\\.X_RDK_SessionRefreshForceSelectedMethod$"
+        },
+        "type": {
+          "type": "string",
+          "const": "boolean"
+        },
+        "value": {
+          "type": "boolean"
+        }
+      }
+    },
+    "voiceServiceSIPNetworkX_RDK_SessionRefreshRequestUseUpdate": {
+      "description": "Conferencing server URI.Access = Read-Write",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^Device\\.Services\\.VoiceService\\.\\d+\\.SIP\\.Network\\.\\d+\\.X_RDK_SessionRefreshRequestUseUpdate$"
+        },
+        "type": {
+          "type": "string",
+          "const": "boolean"
+        },
+        "value": {
+          "type": "boolean"
         }
       }
     },

@@ -4232,6 +4232,11 @@ ANSC_STATUS Map_hal_dml_SIP(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, char* P
             //VoiceService.{i}.SIP.Network.{i}.X_RDK-Central_COM_ConferencingURI
             STRNCPY(pSipNetwork->X_RDK_Central_COM_ConferencingURI, pValue);
         }
+        else if( strstr(ParamName, "X_RDK_ConferencingOption"))
+        {
+            //VoiceService.{i}.SIP.Network.{i}.X_RDK_ConferencingOption
+            STRNCPY(pSipNetwork->X_RDK_ConferencingOption, pValue);
+        }
         else if( strstr(ParamName, "X_RDK-Central_COM_NetworkDisconnect"))
         {
             //VoiceService.{i}.SIP.Network.{i}.X_RDK-Central_COM_NetworkDisconnect
@@ -4242,6 +4247,42 @@ ANSC_STATUS Map_hal_dml_SIP(PDML_VOICE_SERVICE_LIST_T pVoiceServiceList, char* P
             else
             {
                 pSipNetwork->X_RDK_Central_COM_NetworkDisconnect = false;
+            }
+        }
+        else if( strstr(ParamName, "X_RDK_SessionRefreshForceSelectedMethod"))
+        {
+            //VoiceService.{i}.SIP.Network.{i}.X_RDK_SessionRefreshForceSelectedMethod
+            if(strcmp(pValue, "true") == 0 || strcmp(pValue, "1") == 0)
+            {
+                pSipNetwork->X_RDK_SessionRefreshForceSelectedMethod = true;
+            }
+            else
+            {
+                pSipNetwork->X_RDK_SessionRefreshForceSelectedMethod = false;
+            }
+        }
+        else if( strstr(ParamName, "X_RDK_SipSubscribeEnable"))
+        {
+            //VoiceService.{i}.SIP.Network.{i}.X_RDK_SipSubscribeEnable
+            if(strcmp(pValue, "true") == 0 || strcmp(pValue, "1") == 0)
+            {
+                pSipNetwork->X_RDK_SipSubscribeEnable = true;
+            }
+            else
+            {
+                pSipNetwork->X_RDK_SipSubscribeEnable = false;
+            }
+        }
+        else if( strstr(ParamName, "X_RDK_SessionRefreshRequestUseUpdate"))
+        {
+            //VoiceService.{i}.SIP.Network.{i}.X_RDK_SessionRefreshRequestUseUpdate
+            if(strcmp(pValue, "true") == 0 || strcmp(pValue, "1") == 0)
+            {
+                pSipNetwork->X_RDK_SessionRefreshRequestUseUpdate = true;
+            }
+            else
+            {
+                pSipNetwork->X_RDK_SessionRefreshRequestUseUpdate = false;
             }
         }
         else if( strstr(ParamName, "X_RDK_PRACKRequired"))
