@@ -2273,14 +2273,9 @@ char *getDeviceMac()
         return NULL;
     }
 
-    while (!strlen(deviceMAC))
+    if (!strlen(deviceMAC))
     {
         char deviceMACValue[32] = {'\0'};
-
-        if (strlen(deviceMAC))
-        {
-            break;
-        }
 
         if (CCSP_SUCCESS == sysevent_get(fd, token, "eth_wan_mac", deviceMACValue, sizeof(deviceMACValue)) && deviceMACValue[0] != '\0')
         {
