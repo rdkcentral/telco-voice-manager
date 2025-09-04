@@ -75,6 +75,8 @@
                             "RegistrarServerPort": 5060,
                             "UserAgentDomain": "defaultDomain",
                             "X_RDK-Central_COM_ConferencingURI": "defaultConfUri",
+                            "X_RDK_MinSessionExpires": 600,
+                            "X_RDK_SessionExpires": 1800,
                             "X_RDK_ConferencingOption": "ReferServer",
                             "X_RDK_SipSubscribeEnable":false,
                             "X_RDK_SessionRefreshForceSelectedMethod":true,

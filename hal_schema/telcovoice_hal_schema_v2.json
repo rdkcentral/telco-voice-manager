@@ -997,6 +997,8 @@
         { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_SessionRefreshForceSelectedMethod"},
         { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_SessionRefreshRequestUseUpdate"},
         { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_PRACKRequired" },
+        { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_MinSessionExpires" },
+        { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_SessionExpires" },
         { "$ref": "#/definitions/voiceServiceSIPNetworkVoIPProfile" },
         { "$ref": "#/definitions/voiceServiceSIPNetworkMaxSessions" },
         { "$ref": "#/definitions/voiceServiceSIPNetworkFQDNServer" },
@@ -1347,6 +1349,8 @@
         { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_SessionRefreshForceSelectedMethod"},
         { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_SessionRefreshRequestUseUpdate"},
         { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_PRACKRequired" },
+        { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_MinSessionExpires" },
+        { "$ref": "#/definitions/voiceServiceSIPNetworkX_RDK_SessionExpires" },
         { "$ref": "#/definitions/voiceServiceSIPNetworkVoIPProfile" },
         { "$ref": "#/definitions/voiceServiceSIPNetworkMaxSessions" },
         { "$ref": "#/definitions/voiceServiceSIPNetworkFQDNServer" },
@@ -6934,6 +6938,43 @@
         },
         "value": {
           "type": "boolean"
+        }
+      }
+    },
+    "voiceServiceSIPNetworkX_RDK_MinSessionExpires": {
+      "description": "Minimum Session Expires Timeout.Access = Read-Write",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^Device\\.Services\\.VoiceService\\.\\d+\\.SIP\\.Network\\.\\d+\\.X_RDK_MinSessionExpires$"
+        },
+        "type": {
+          "type": "string",
+          "const": "unsignedInt"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "voiceServiceSIPNetworkX_RDK_SessionExpires": {
+      "description": "Session Expires timeout.Access = Read-Write",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^Device\\.Services\\.VoiceService\\.\\d+\\.SIP\\.Network\\.\\d+\\.X_RDK_SessionExpires$"
+        },
+        "type": {
+          "type": "string",
+          "const": "unsignedInt"
+        },
+        "value": {
+          "type": "integer"
         }
       }
     },

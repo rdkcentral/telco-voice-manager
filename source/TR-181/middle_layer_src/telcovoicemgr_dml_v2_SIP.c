@@ -2690,6 +2690,16 @@ BOOL TelcoVoiceMgrDml_SIP_NetworkList_GetParamUlongValue(ANSC_HANDLE hInsContext
         *puLong = pHEAD->ChosenPort;
         ret = TRUE;
     }
+    else if (strcmp(ParamName, "X_RDK_MinSessionExpires") == 0)
+    {
+        *puLong = pHEAD->X_RDK_MinSessionExpires;
+        ret = TRUE;
+    }
+    else if (strcmp(ParamName, "X_RDK_SessionExpires") == 0)
+    {
+        *puLong = pHEAD->X_RDK_SessionExpires;
+        ret = TRUE;
+    }
     else
     {
         CcspTraceWarning(("%s: Unsupported parameter '%s'\n", __func__,ParamName));
@@ -3278,6 +3288,36 @@ BOOL TelcoVoiceMgrDml_SIP_NetworkList_SetParamUlongValue(ANSC_HANDLE hInsContext
             TELCOVOICEMGR_LOCK_OR_EXIT()
 
             pHEAD->DSCPMark = uValue;
+
+            TELCOVOICEMGR_UNLOCK()
+
+            ret = TRUE;
+        }
+    }
+    else if (strcmp(ParamName, "X_RDK_MinSessionExpires") == 0)
+    {
+        snprintf(HalName, MAX_STR_LEN, "Device.Services.VoiceService.%d.SIP.Network.%d.X_RDK_MinSessionExpires",uVsIndex,uNetworkIndex);
+
+        if (TelcoVoiceMgrHal_SetParamULong(HalName,uValue) == ANSC_STATUS_SUCCESS)
+        {
+            TELCOVOICEMGR_LOCK_OR_EXIT()
+
+            pHEAD->X_RDK_MinSessionExpires = uValue;
+
+            TELCOVOICEMGR_UNLOCK()
+
+            ret = TRUE;
+        }
+    }
+    else if (strcmp(ParamName, "X_RDK_SessionExpires") == 0)
+    {
+        snprintf(HalName, MAX_STR_LEN, "Device.Services.VoiceService.%d.SIP.Network.%d.X_RDK_SessionExpires",uVsIndex,uNetworkIndex);
+
+        if (TelcoVoiceMgrHal_SetParamULong(HalName,uValue) == ANSC_STATUS_SUCCESS)
+        {
+            TELCOVOICEMGR_LOCK_OR_EXIT()
+
+            pHEAD->X_RDK_SessionExpires = uValue;
 
             TELCOVOICEMGR_UNLOCK()
 
