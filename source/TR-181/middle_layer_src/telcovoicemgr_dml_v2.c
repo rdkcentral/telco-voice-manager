@@ -543,7 +543,7 @@ ULONG VoiceService_GetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName,
         AnscCopyString(pValue,pHEAD->X_RDK_Firewall_Rule_Data);
         ret = 0;
     }
-    else if( AnscEqualString(ParamName, "X_RDK_LocalTimeZone", TRUE) )
+    else if (strcmp(ParamName, "X_RDK_LocalTimeZone") == 0)
     {
         if(ANSC_STATUS_SUCCESS == TelcoVoiceMgrDmlGetX_RDK_LocalTimeZone(pHEAD->X_RDK_LocalTimeZone))
         {

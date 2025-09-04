@@ -29,7 +29,7 @@
 #include "ccsp_base_api.h"
 #include "telcovoicemgr_dml_json_cfg_init.h"
 #include <ctype.h>
-#include <syscfg.h>
+#include <syscfg/syscfg.h>
 #include <telcovoicemgr_dml_hal.h>
 #ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
 #include "telcovoicemgr_services_apis_v2.h"

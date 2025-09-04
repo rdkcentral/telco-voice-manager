@@ -45,7 +45,7 @@
 #include "telcovoicemgr_services_apis_v1.h"
 #endif
 #include "telcovoicemgr_dml_hal.h"
-#include <syscfg.h>
+#include <syscfg/syscfg.h>
 
 #define VOICE_HAL_NORMAL_DIGIT_MAP  "DigitMap"
 #define VOICE_HAL_EMERGENCY_DIGIT_MAP  "X_RDK-Central_COM_EmergencyDigitMap"

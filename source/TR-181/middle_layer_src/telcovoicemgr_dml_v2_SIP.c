@@ -264,7 +264,7 @@ BOOL TelcoVoiceMgrDml_SIP_ClientList_GetParamUlongValue(ANSC_HANDLE hInsContext,
         *puLong = pHEAD->MaxSessions;
         ret = TRUE;
     }
-    else if( AnscEqualString(ParamName, "X_RDK_LastChange", TRUE) )
+    else if (strcmp(ParamName, "X_RDK_LastChange") == 0)
     {
         memset(&req_param, 0, sizeof(req_param));
         snprintf(req_param.name, sizeof(req_param.name), "Device.Services.VoiceService.%d.SIP.Client.%d.X_RDK_LastChange",
