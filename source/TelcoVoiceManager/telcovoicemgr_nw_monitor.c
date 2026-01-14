@@ -318,13 +318,22 @@ static void voice_event_handler(char *pEvtName, char *pEvtValue)
     }
     else if ( !strcmp(pEvtName, SYSEVENT_FIREWALL_STATUS) )
     {
-        if ( !strcmp(pEvtValue, "started") )
+        if (pthread_mutex_lock(&firewall_status_mutex) == 0)
         {
-            firewall_status = FIREWALLSTATUS_STARTED;
+            if ( !strcmp(pEvtValue, "started") )
+            {
+                firewall_status = FIREWALLSTATUS_STARTED;
+            }
+            else if( !strcmp(pEvtValue, "starting") )
+            {
+                firewall_status = FIREWALLSTATUS_STARTING;
+            }
+            pthread_mutex_unlock(&firewall_status_mutex);
         }
-        else if( !strcmp(pEvtValue, "starting") )
+        else
         {
-            firewall_status = FIREWALLSTATUS_STARTING;
+            CcspTraceError(("Failed to acquire firewall status lock\n"));
+            ret = ANSC_STATUS_FAILURE;
         }
     }
 #ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
@@ -620,7 +629,7 @@ int firewall_restart_for_voice(unsigned long timeout_ms)
             CcspTraceError(("Failed to acquire firewall status lock\n"));
             ret = ANSC_STATUS_FAILURE;
         }
-        usleep(10000);
+        usleep(100000);
         gettimeofday(&tnow, NULL);
     }
 
