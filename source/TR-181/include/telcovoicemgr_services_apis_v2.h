@@ -3251,6 +3251,11 @@ ANSC_STATUS TelcoVoiceMgrDmlGetCallLogStats(uint32_t uiService, uint32_t uiCallL
 ANSC_STATUS TelcoVoiceMgrConvertProtocolToEnum(char *protocol, uint32_t *protocolEnum);
 ANSC_STATUS TelcoVoiceMgrDmlGetEthernetPriorityMark(uint32_t uiService, uint32_t uiProfile, PROTOCOL_TYPE protocol, int* pValue);
 int firewall_restart_for_voice(unsigned long timeout_ms);
+#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
+int check_and_wait_for_firewall(unsigned long timeout_ms);
+#endif
+int lock_firewall_status_object(void);
+int release_firewall_status_object(void);
 void TelcoVoiceMgrSyseventDeInit();
 int TelcoVoiceMgrSyseventInit();
 #endif /* _TELCOVOICEMGR_SERVICES_APIS_H */

@@ -102,6 +102,7 @@ static token_t sysevent_notify_token = -1;
 static char ipAddrFamily[IP_ADDR_FAMILY_LENGTH] = {0};
 static char boundIfName[BOUND_IF_NAME_LENGTH] = {0};
 static int firewall_status = FIREWALLSTATUS_STARTING;
+static pthread_mutex_t firewall_status_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* ---- Private Function Prototypes -------------------------- */
 static void voice_event_handler(char *pEvtName, char *pEvtValue);
@@ -504,6 +505,60 @@ static void event_set_wan_status (void)
     }
 }
 
+#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
+/*check_and_wait_for_firewall  
+*
+* @description : Wait for firewall running state and Update firewall rule 
+*
+* @return The status of the operation.
+* @retval ANSC_STATUS_SUCCESS if successful.
+* @retval ANSC_STATUS_FAILURE if any error is detected
+*/
+int check_and_wait_for_firewall(unsigned long timeout_ms)
+{
+    struct timeval tstart;
+    struct timeval ttimeout;
+    struct timeval tend;
+    struct timeval tnow;
+    int ret = ANSC_STATUS_UNDETERMINED;
+
+    // Wait for 5 sec to firewall come to started state
+    gettimeofday(&tstart, NULL);
+    ttimeout.tv_sec  = (timeout_ms/1000);
+    ttimeout.tv_usec = (timeout_ms % 1000) * 1000;
+    timeradd (&tstart, &ttimeout, &tend);
+
+    gettimeofday(&tnow, NULL);
+    while (timercmp (&tnow, &tend, <))
+    {
+        if (lock_firewall_status_object() == ANSC_STATUS_SUCCESS)
+        {
+            if ( firewall_status == FIREWALLSTATUS_STARTED )
+            {
+                CcspTraceInfo (( "%s %d - firewall is running\n", __FUNCTION__, __LINE__ ));
+                ret = ANSC_STATUS_SUCCESS;
+                release_firewall_status_object();
+                break;
+            }
+            release_firewall_status_object();
+        }
+        else
+        {
+            CcspTraceError(("Failed to acquire firewall status lock\n"));
+            break;
+        }
+        usleep(10000);
+        gettimeofday(&tnow, NULL);
+    }
+
+    if (ret == ANSC_STATUS_UNDETERMINED)
+    {
+        CcspTraceError (( "%s %d - firewall status get timeout \n", __FUNCTION__, __LINE__ ));
+    }
+
+    return ret;
+}
+
 /*firewall_restart_for_voice */
 /*
 * @description : Restart firewall and wait until firewall restart is completed
@@ -520,33 +575,83 @@ int firewall_restart_for_voice(unsigned long timeout_ms)
     struct timeval tend;
     struct timeval tnow;
     bool firewall_restart_initiated = false;
+    int ret = ANSC_STATUS_UNDETERMINED;
 
     gettimeofday(&tstart, NULL);
     ttimeout.tv_sec  = (timeout_ms/1000);
     ttimeout.tv_usec = (timeout_ms % 1000) * 1000;
     timeradd (&tstart, &ttimeout, &tend);
 
-    firewall_status = FIREWALLSTATUS_STOPPED;
+    if (lock_firewall_status_object() == ANSC_STATUS_SUCCESS)
+    {
+        firewall_status = FIREWALLSTATUS_STOPPED;
+        release_firewall_status_object();
+    }
+    else
+    {
+        CcspTraceError(("Failed to acquire firewall status lock\n"));
+        ret = ANSC_STATUS_FAILURE;
+    }
+
     if (sysevent_set(sysevent_voice_fd, sysevent_voice_token, SYSEVENT_FIREWALL_RESTART, NULL, 0))
     {
         CcspTraceWarning(("%s :: SYSEVENT_FIREWALL_RESTART failed \n", __FUNCTION__));
-        return ANSC_STATUS_FAILURE;
+        ret = ANSC_STATUS_FAILURE;
     }
     gettimeofday(&tnow, NULL);
     while (timercmp (&tnow, &tend, <))
     {
-        if ( firewall_status == FIREWALLSTATUS_STARTING )
+        if (lock_firewall_status_object() == ANSC_STATUS_SUCCESS)
         {
-            firewall_restart_initiated = true;
+            if ( firewall_status == FIREWALLSTATUS_STARTING )
+            {
+                firewall_restart_initiated = true;
+            }
+            if ( firewall_restart_initiated && firewall_status == FIREWALLSTATUS_STARTED )
+            {
+                CcspTraceInfo (( "%s %d - firewall restart process finished\n", __FUNCTION__, __LINE__ ));
+                ret = ANSC_STATUS_SUCCESS;
+                release_firewall_status_object();
+                break;
+            }
+            release_firewall_status_object();
         }
-        if ( firewall_restart_initiated && firewall_status == FIREWALLSTATUS_STARTED )
+        else
         {
-            CcspTraceInfo (( "%s %d - firewall restart process finished\n", __FUNCTION__, __LINE__ ));
-            return ANSC_STATUS_SUCCESS;
+            CcspTraceError(("Failed to acquire firewall status lock\n"));
+            ret = ANSC_STATUS_FAILURE;
         }
         usleep(10000);
         gettimeofday(&tnow, NULL);
     }
-    CcspTraceError (( "%s %d - firewall restart timeout\n", __FUNCTION__, __LINE__ ));
-    return ANSC_STATUS_FAILURE;
+
+    if(ret == ANSC_STATUS_UNDETERMINED)
+    {
+        CcspTraceError (( "%s %d - firewall restart timeout\n", __FUNCTION__, __LINE__ ));
+    }
+
+    return ret;
+}
+#endif
+
+int lock_firewall_status_object(void)
+{
+    if (pthread_mutex_lock(&firewall_status_mutex) != 0)
+    {
+        CcspTraceError(("lock_firewall_status_object: mutex lock failed\n"));
+        return ANSC_STATUS_FAILURE;
+    }
+
+    /* return current value while holding the lock; caller should call release to unlock */
+    return ANSC_STATUS_SUCCESS;
+}
+
+int release_firewall_status_object(void)
+{
+    if (pthread_mutex_unlock(&firewall_status_mutex) != 0)
+    {
+        CcspTraceError(("release_firewall_status_object: mutex unlock failed\n"));
+        return ANSC_STATUS_FAILURE;
+    }
+    return ANSC_STATUS_SUCCESS;
 }
