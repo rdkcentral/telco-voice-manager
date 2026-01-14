@@ -3079,10 +3079,8 @@ ANSC_STATUS TelcoVoiceMgrDmlSetX_RDK_FirewallRuleData(char * FirewallRuleData, U
 
         if( !strcmp(ipAddrFamily, STR_IPV4) )
         {
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
             if(check_and_wait_for_firewall(UTOPIA_FIREWALL_RESTART_TIMEOUT_MS) == ANSC_STATUS_SUCCESS)
             {
-#endif
                 /*
                 * Prepare sysevent for SKBMark, firewall rules set from utopia based on this sysevent value
                 * eg:Format: sipIp1,sipPort1,sipSKBMark;sipIp2,sipPort2,sipSKBMark;rtpIp1,rtpPort1,rtpSKBMark;rtpIp2,rtpPort2,rtpSKBMark;
@@ -3119,13 +3117,12 @@ ANSC_STATUS TelcoVoiceMgrDmlSetX_RDK_FirewallRuleData(char * FirewallRuleData, U
                     //Iptable rules for RTP are explicitly added without firewall restart.
                     firewall_restart_for_voice(UTOPIA_FIREWALL_RESTART_TIMEOUT_MS);
                 }
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
             }
             else
             {
                 CcspTraceError (( "%s %d - firewall rules are not applied! \n", __FUNCTION__, __LINE__ ));
             }
-#endif
+
             /* Save previous data and delete old rules in next iteration.*/
             snprintf(prevRtpRuleData,sizeof(prevRtpRuleData), "%s", rtpPinholeBuffer);
             prevRtpDscpMark = rtpDscpMark;
@@ -3134,10 +3131,8 @@ ANSC_STATUS TelcoVoiceMgrDmlSetX_RDK_FirewallRuleData(char * FirewallRuleData, U
         }
         else if( !strcmp(ipAddrFamily, STR_IPV6) )
         {
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
             if(check_and_wait_for_firewall(UTOPIA_FIREWALL_RESTART_TIMEOUT_MS) == ANSC_STATUS_SUCCESS)
             {
-#endif
                 /*
                 * Prepare sysevent for SKBMark, firewall rules set from utopia based on this sysevent value
                 * eg:Format: sipIp1,sipPort1,sipSKBMark;sipIp2,sipPort2,sipSKBMark;rtpIp1,rtpPort1,rtpSKBMark;rtpIp2,rtpPort2,rtpSKBMark;
@@ -3196,13 +3191,12 @@ ANSC_STATUS TelcoVoiceMgrDmlSetX_RDK_FirewallRuleData(char * FirewallRuleData, U
                     //Iptable rules for RTP are explicitly added without firewall restart.
                     firewall_restart_for_voice(UTOPIA_FIREWALL_RESTART_TIMEOUT_MS);
                 }
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
             }
             else
             {
                 CcspTraceError (( "%s %d - firewall rules are not applied! \n", __FUNCTION__, __LINE__ ));
             }
-#endif
+
             /* Save previous data and delete old rules in next iteration.*/
             snprintf(prevRtpRuleData,sizeof(prevRtpRuleData), "%s", presentList);
             prevRtpDscpMark = rtpDscpMark;

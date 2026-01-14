@@ -505,10 +505,9 @@ static void event_set_wan_status (void)
     }
 }
 
-#ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
-/*check_and_wait_for_firewall  
+/*check_and_wait_for_firewall
 *
-* @description : Wait for firewall running state and Update firewall rule 
+* @description : Wait for firewall running state and Update firewall rule
 *
 * @return The status of the operation.
 * @retval ANSC_STATUS_SUCCESS if successful.
@@ -531,16 +530,16 @@ int check_and_wait_for_firewall(unsigned long timeout_ms)
     gettimeofday(&tnow, NULL);
     while (timercmp (&tnow, &tend, <))
     {
-        if (lock_firewall_status_object() == ANSC_STATUS_SUCCESS)
+        if (pthread_mutex_lock(&firewall_status_mutex) == 0)
         {
             if ( firewall_status == FIREWALLSTATUS_STARTED )
             {
                 CcspTraceInfo (( "%s %d - firewall is running\n", __FUNCTION__, __LINE__ ));
                 ret = ANSC_STATUS_SUCCESS;
-                release_firewall_status_object();
+                pthread_mutex_unlock(&firewall_status_mutex);
                 break;
             }
-            release_firewall_status_object();
+            pthread_mutex_unlock(&firewall_status_mutex);
         }
         else
         {
@@ -582,10 +581,10 @@ int firewall_restart_for_voice(unsigned long timeout_ms)
     ttimeout.tv_usec = (timeout_ms % 1000) * 1000;
     timeradd (&tstart, &ttimeout, &tend);
 
-    if (lock_firewall_status_object() == ANSC_STATUS_SUCCESS)
+    if (pthread_mutex_lock(&firewall_status_mutex) == 0)
     {
         firewall_status = FIREWALLSTATUS_STOPPED;
-        release_firewall_status_object();
+        pthread_mutex_unlock(&firewall_status_mutex);
     }
     else
     {
@@ -601,7 +600,7 @@ int firewall_restart_for_voice(unsigned long timeout_ms)
     gettimeofday(&tnow, NULL);
     while (timercmp (&tnow, &tend, <))
     {
-        if (lock_firewall_status_object() == ANSC_STATUS_SUCCESS)
+        if (pthread_mutex_lock(&firewall_status_mutex) == 0)
         {
             if ( firewall_status == FIREWALLSTATUS_STARTING )
             {
@@ -611,10 +610,10 @@ int firewall_restart_for_voice(unsigned long timeout_ms)
             {
                 CcspTraceInfo (( "%s %d - firewall restart process finished\n", __FUNCTION__, __LINE__ ));
                 ret = ANSC_STATUS_SUCCESS;
-                release_firewall_status_object();
+                pthread_mutex_unlock(&firewall_status_mutex);
                 break;
             }
-            release_firewall_status_object();
+            pthread_mutex_unlock(&firewall_status_mutex);
         }
         else
         {
@@ -631,27 +630,4 @@ int firewall_restart_for_voice(unsigned long timeout_ms)
     }
 
     return ret;
-}
-#endif
-
-int lock_firewall_status_object(void)
-{
-    if (pthread_mutex_lock(&firewall_status_mutex) != 0)
-    {
-        CcspTraceError(("lock_firewall_status_object: mutex lock failed\n"));
-        return ANSC_STATUS_FAILURE;
-    }
-
-    /* return current value while holding the lock; caller should call release to unlock */
-    return ANSC_STATUS_SUCCESS;
-}
-
-int release_firewall_status_object(void)
-{
-    if (pthread_mutex_unlock(&firewall_status_mutex) != 0)
-    {
-        CcspTraceError(("release_firewall_status_object: mutex unlock failed\n"));
-        return ANSC_STATUS_FAILURE;
-    }
-    return ANSC_STATUS_SUCCESS;
 }
