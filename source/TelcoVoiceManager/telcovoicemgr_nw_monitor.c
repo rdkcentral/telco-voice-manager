@@ -333,7 +333,6 @@ static void voice_event_handler(char *pEvtName, char *pEvtValue)
         else
         {
             CcspTraceError(("Failed to acquire firewall status lock\n"));
-            ret = ANSC_STATUS_FAILURE;
         }
     }
 #ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
