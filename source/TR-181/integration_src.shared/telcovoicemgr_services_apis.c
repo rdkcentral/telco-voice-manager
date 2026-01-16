@@ -3153,8 +3153,8 @@ ANSC_STATUS TelcoVoiceMgrDmlSetX_RDK_FirewallRuleData(char * FirewallRuleData, U
                 /* Delete old rule and add new one for RTP*/
                 if(prevRtpRuleData[0] != '\0')
                 {
-                    strncpy(deleteList, prevRtpRuleData, sizeof(deleteList));
-                    strncpy(addList, rtpPinholeBuffer, sizeof(addList));
+                    strncpy(deleteList, prevRtpRuleData, sizeof(deleteList) - 1 );
+                    strncpy(addList, rtpPinholeBuffer, sizeof(addList) - 1);
                     if (prevRtpDscpMark == rtpDscpMark && prevRtpSkbMark == rtpSkbMark)
                     {
                         memset(addList, 0, sizeof(addList));
