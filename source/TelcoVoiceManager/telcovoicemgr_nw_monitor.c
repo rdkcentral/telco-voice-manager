@@ -56,7 +56,7 @@
 #define SYSEVENT_IPV4_CONNECTION_STATE "ipv4_connection_state"
 #define SYSEVENT_IPV6_CONNECTION_STATE "ipv6_connection_state"
 #define SYSEVENT_IPV4_IP_ADDRESS "ipv4_%s_ipaddr"
-#define SYSEVENT_IPV6_PREFIX "ipv6_prefix"
+#define SYSEVENT_IPV6_IP_ADDRESS "tr_%s_dhcpv6_client_v6addr"
 /*WAN/LAN specific sysevent fieldnames*/
 #define SYSEVENT_CURRENT_WAN_IFNAME "current_wan_ifname"
 #define SYSEVENT_LAN_STATUS "lan-status"
@@ -461,14 +461,12 @@ static void event_set_wan_status (void)
         {
             if (!strcmp(conState, "up"))
             {
-                if (sysevent_get(sysevent_rw_fd, sysevent_token, SYSEVENT_IPV6_PREFIX, ipAddr, sizeof(ipAddr)) == 0)
+                if (sysevent_get(sysevent_rw_fd, sysevent_token, SYSEVENT_CURRENT_WAN_IFNAME, ifName, sizeof(ifName)) == 0)
                 {
-                    char *ipv6_addr;
-                    CcspTraceInfo(("%s:: IPv6 Prefix Address ----> { %s}\n", __FUNCTION__, ipAddr));
-                    ipv6_addr = strchr(ipAddr, '/');
-                    if(ipv6_addr != NULL)
+                    char sysevent_param_name[32] = {0};
+                    snprintf(sysevent_param_name, sizeof(sysevent_param_name), SYSEVENT_IPV6_IP_ADDRESS, ifName);
+                    if (sysevent_get(sysevent_rw_fd, sysevent_token, sysevent_param_name, ipAddr, sizeof(ipAddr)) == 0)
                     {
-                        strncpy(ipv6_addr, "1",2);
                         CcspTraceInfo(("%s:: WAN IPv6 Address updated! { %s }\n", __FUNCTION__, ipAddr));
                         CcspTraceNotice(("TELCOVOICEMANAGER_IPV6_WANUP :: Voice Manager: IPV6 WAN up\n"));
                         //update the SKBmark reading from Wan Manager
