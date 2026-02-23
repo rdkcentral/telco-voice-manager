@@ -3079,42 +3079,50 @@ ANSC_STATUS TelcoVoiceMgrDmlSetX_RDK_FirewallRuleData(char * FirewallRuleData, U
 
         if( !strcmp(ipAddrFamily, STR_IPV4) )
         {
-            /*
-            * Prepare sysevent for SKBMark, firewall rules set from utopia based on this sysevent value
-            * eg:Format: sipIp1,sipPort1,sipSKBMark;sipIp2,sipPort2,sipSKBMark;rtpIp1,rtpPort1,rtpSKBMark;rtpIp2,rtpPort2,rtpSKBMark;
-            */
-            sysevent_set(sysevent_voice_fd, sysevent_voice_token, SYSEVENT_VOICE_IPV4_ETHERNETPRIORITY, ethernetPriorityBuffer, 0);
-            CcspTraceInfo(("[%s:%d] SYSEVENT_VOICE_IPV4_ETHERNETPRIORITY %s\n", __FUNCTION__, __LINE__, ethernetPriorityBuffer));
-
-            /*
-            * Prepare sysevent for DSCPMark, firewall rules set from utopia based on this sysevent value
-            * eg:Format: sipIp1,sipPort1,sipDSCPMark;sipIp2,sipPort2,sipDSCPMark;rtpIp1,rtpPort1,rtpDSCPMark;rtpIp2,rtpPort2,rtpDSCPMark;
-            */
-            sysevent_set(sysevent_voice_fd, sysevent_voice_token, SYSEVENT_VOICE_IPV4_DSCP, dscpBuffer, 0);
-            CcspTraceInfo(("[%s:%d] SYSEVENT_VOICE_IPV4_DSCP %s\n", __FUNCTION__, __LINE__, dscpBuffer));
-
-            sysevent_set(sysevent_voice_fd, sysevent_voice_token, SYSEVENT_VOICE_IPV4_PROXYLIST, sipOutBoundProxyBuffer, 0);
-            CcspTraceInfo(("[%s:%d] SYSEVENT_VOICE_IPV4_PROXYLIST %s\n", __FUNCTION__, __LINE__, sipOutBoundProxyBuffer));
-
-
-            /* Delete old rule and add new one for RTP*/
-            if(prevRtpRuleData[0] != '\0')
+            if(check_and_wait_for_firewall(UTOPIA_FIREWALL_RESTART_TIMEOUT_MS) == ANSC_STATUS_SUCCESS)
             {
-                set_iptable_rules_for_rtp(prevRtpRuleData, prevRtpDscpMark, prevRtpSkbMark, previpAddressFamily, DELETE_RULE);
+                /*
+                * Prepare sysevent for SKBMark, firewall rules set from utopia based on this sysevent value
+                * eg:Format: sipIp1,sipPort1,sipSKBMark;sipIp2,sipPort2,sipSKBMark;rtpIp1,rtpPort1,rtpSKBMark;rtpIp2,rtpPort2,rtpSKBMark;
+                */
+                sysevent_set(sysevent_voice_fd, sysevent_voice_token, SYSEVENT_VOICE_IPV4_ETHERNETPRIORITY, ethernetPriorityBuffer, 0);
+                CcspTraceInfo(("[%s:%d] SYSEVENT_VOICE_IPV4_ETHERNETPRIORITY %s\n", __FUNCTION__, __LINE__, ethernetPriorityBuffer));
+
+                /*
+                * Prepare sysevent for DSCPMark, firewall rules set from utopia based on this sysevent value
+                * eg:Format: sipIp1,sipPort1,sipDSCPMark;sipIp2,sipPort2,sipDSCPMark;rtpIp1,rtpPort1,rtpDSCPMark;rtpIp2,rtpPort2,rtpDSCPMark;
+                */
+                sysevent_set(sysevent_voice_fd, sysevent_voice_token, SYSEVENT_VOICE_IPV4_DSCP, dscpBuffer, 0);
+                CcspTraceInfo(("[%s:%d] SYSEVENT_VOICE_IPV4_DSCP %s\n", __FUNCTION__, __LINE__, dscpBuffer));
+
+                                    sysevent_set(sysevent_voice_fd, sysevent_voice_token, SYSEVENT_VOICE_IPV4_PROXYLIST, sipOutBoundProxyBuffer, 0);
+                CcspTraceInfo(("[%s:%d] SYSEVENT_VOICE_IPV4_PROXYLIST %s\n", __FUNCTION__, __LINE__, sipOutBoundProxyBuffer));
+
+
+                                                        /* Delete old rule and add new one for RTP*/
+                if(prevRtpRuleData[0] != '\0')
+                {
+                    set_iptable_rules_for_rtp(prevRtpRuleData, prevRtpDscpMark, prevRtpSkbMark, previpAddressFamily, DELETE_RULE);
+                }
+
+                //For RTP events, set sysevent and apply iptable rules from here, do not restart firewall.
+                set_iptable_rules_for_rtp(rtpPinholeBuffer, rtpDscpMark, rtpSkbMark, VOICE_HAL_AF_INET_V4, ADD_RULE);
+
+                             sysevent_set(sysevent_voice_fd, sysevent_voice_token, SYSEVENT_VOICE_IPV4_RTPLIST, rtpPinholeBuffer, 0);
+                CcspTraceInfo(("[%s:%d] SYSEVENT_VOICE_IPV4_RTPLIST %s\n", __FUNCTION__, __LINE__, rtpPinholeBuffer));
+
+                if((rtpPinholeBuffer[0] == '\0') && (prevRtpRuleData[0] == '\0'))
+                {
+                    //Restart firewall for only SIP events.
+                    //Iptable rules for RTP are explicitly added without firewall restart.
+                    firewall_restart_for_voice(UTOPIA_FIREWALL_RESTART_TIMEOUT_MS);
+                }
+            }
+            else
+            {
+                CcspTraceError (( "%s %d - firewall rules are not applied! \n", __FUNCTION__, __LINE__ ));
             }
 
-            //For RTP events, set sysevent and apply iptable rules from here, do not restart firewall.
-            set_iptable_rules_for_rtp(rtpPinholeBuffer, rtpDscpMark, rtpSkbMark, VOICE_HAL_AF_INET_V4, ADD_RULE);
-
-            sysevent_set(sysevent_voice_fd, sysevent_voice_token, SYSEVENT_VOICE_IPV4_RTPLIST, rtpPinholeBuffer, 0);
-            CcspTraceInfo(("[%s:%d] SYSEVENT_VOICE_IPV4_RTPLIST %s\n", __FUNCTION__, __LINE__, rtpPinholeBuffer));
-
-            if((rtpPinholeBuffer[0] == '\0') && (prevRtpRuleData[0] == '\0'))
-            {
-                //Restart firewall for only SIP events.
-                //Iptable rules for RTP are explicitly added without firewall restart.
-                firewall_restart_for_voice(UTOPIA_FIREWALL_RESTART_TIMEOUT_MS);
-            }
             /* Save previous data and delete old rules in next iteration.*/
             snprintf(prevRtpRuleData,sizeof(prevRtpRuleData), "%s", rtpPinholeBuffer);
             prevRtpDscpMark = rtpDscpMark;
@@ -3123,64 +3131,72 @@ ANSC_STATUS TelcoVoiceMgrDmlSetX_RDK_FirewallRuleData(char * FirewallRuleData, U
         }
         else if( !strcmp(ipAddrFamily, STR_IPV6) )
         {
-            /*
-            * Prepare sysevent for SKBMark, firewall rules set from utopia based on this sysevent value
-            * eg:Format: sipIp1,sipPort1,sipSKBMark;sipIp2,sipPort2,sipSKBMark;rtpIp1,rtpPort1,rtpSKBMark;rtpIp2,rtpPort2,rtpSKBMark;
-            */
-            sysevent_set(sysevent_voice_fd, sysevent_voice_token, SYSEVENT_VOICE_IPV6_ETHERNETPRIORITY, ethernetPriorityBuffer, 0);
-            CcspTraceInfo(("[%s:%d] SYSEVENT_VOICE_IPV6_ETHERNETPRIORITY %s\n", __FUNCTION__, __LINE__, ethernetPriorityBuffer));
-
-            /*
-            * Prepare sysevent for DSCPMark, firewall rules set from utopia based on this sysevent value
-            * eg:Format: sipIp1,sipPort1,sipDSCPMark;sipIp2,sipPort2,sipDSCPMark;rtpIp1,rtpPort1,rtpDSCPMark;rtpIp2,rtpPort2,rtpDSCPMark;
-            */
-            sysevent_set(sysevent_voice_fd, sysevent_voice_token, SYSEVENT_VOICE_IPV6_DSCP, dscpBuffer, 0);
-            CcspTraceInfo(("[%s:%d] SYSEVENT_VOICE_IPV6_DSCP %s\n", __FUNCTION__, __LINE__, dscpBuffer));
-
-            sysevent_set(sysevent_voice_fd, sysevent_voice_token, SYSEVENT_VOICE_IPV6_PROXYLIST, sipOutBoundProxyBuffer, 0);
-            CcspTraceInfo(("[%s:%d] SYSEVENT_VOICE_IPV6_PROXYLIST %s\n", __FUNCTION__, __LINE__, sipOutBoundProxyBuffer));
-
-            /* Delete old rule and add new one for RTP*/
-            if(prevRtpRuleData[0] != '\0')
+            if(check_and_wait_for_firewall(UTOPIA_FIREWALL_RESTART_TIMEOUT_MS) == ANSC_STATUS_SUCCESS)
             {
-                strncpy(deleteList, prevRtpRuleData, sizeof(deleteList));
-                strncpy(addList, rtpPinholeBuffer, sizeof(addList));
-                if (prevRtpDscpMark == rtpDscpMark && prevRtpSkbMark == rtpSkbMark)
+                /*
+                * Prepare sysevent for SKBMark, firewall rules set from utopia based on this sysevent value
+                * eg:Format: sipIp1,sipPort1,sipSKBMark;sipIp2,sipPort2,sipSKBMark;rtpIp1,rtpPort1,rtpSKBMark;rtpIp2,rtpPort2,rtpSKBMark;
+                */
+                sysevent_set(sysevent_voice_fd, sysevent_voice_token, SYSEVENT_VOICE_IPV6_ETHERNETPRIORITY, ethernetPriorityBuffer, 0);
+                CcspTraceInfo(("[%s:%d] SYSEVENT_VOICE_IPV6_ETHERNETPRIORITY %s\n", __FUNCTION__, __LINE__, ethernetPriorityBuffer));
+
+                /*
+                * Prepare sysevent for DSCPMark, firewall rules set from utopia based on this sysevent value
+                * eg:Format: sipIp1,sipPort1,sipDSCPMark;sipIp2,sipPort2,sipDSCPMark;rtpIp1,rtpPort1,rtpDSCPMark;rtpIp2,rtpPort2,rtpDSCPMark;
+                */
+                sysevent_set(sysevent_voice_fd, sysevent_voice_token, SYSEVENT_VOICE_IPV6_DSCP, dscpBuffer, 0);
+                CcspTraceInfo(("[%s:%d] SYSEVENT_VOICE_IPV6_DSCP %s\n", __FUNCTION__, __LINE__, dscpBuffer));
+
+                sysevent_set(sysevent_voice_fd, sysevent_voice_token, SYSEVENT_VOICE_IPV6_PROXYLIST, sipOutBoundProxyBuffer, 0);
+                CcspTraceInfo(("[%s:%d] SYSEVENT_VOICE_IPV6_PROXYLIST %s\n", __FUNCTION__, __LINE__, sipOutBoundProxyBuffer));
+
+                /* Delete old rule and add new one for RTP*/
+                if(prevRtpRuleData[0] != '\0')
                 {
-                    memset(addList, 0, sizeof(addList));
-                    memset(deleteList, 0, sizeof(deleteList));
-                    TelcoVoiceMgrDmlGetSeparateRuleLists(prevRtpRuleData, rtpPinholeBuffer, deleteList, addList, presentList, sizeof(addList));
+                    strncpy(deleteList, prevRtpRuleData, sizeof(deleteList) - 1 );
+                    strncpy(addList, rtpPinholeBuffer, sizeof(addList) - 1);
+                    if (prevRtpDscpMark == rtpDscpMark && prevRtpSkbMark == rtpSkbMark)
+                    {
+                        memset(addList, 0, sizeof(addList));
+                        memset(deleteList, 0, sizeof(deleteList));
+                        TelcoVoiceMgrDmlGetSeparateRuleLists(prevRtpRuleData, rtpPinholeBuffer, deleteList, addList, presentList, sizeof(addList));
+                    }
+                    if(deleteList[0] != '\0')
+                    {
+                        set_iptable_rules_for_rtp(deleteList, prevRtpDscpMark, prevRtpSkbMark, previpAddressFamily, DELETE_RULE);
+                    }
+                    if(addList[0] != '\0')
+                    {
+                        set_iptable_rules_for_rtp(addList, rtpDscpMark, rtpSkbMark, VOICE_HAL_AF_INET_V6, ADD_RULE);
+                    }
                 }
-                if(deleteList[0] != '\0')
+                else if (rtpPinholeBuffer[0] != '\0')
                 {
-                    set_iptable_rules_for_rtp(deleteList, prevRtpDscpMark, prevRtpSkbMark, previpAddressFamily, DELETE_RULE);
+                    //For RTP events, set sysevent and apply iptable rules from here, do not restart firewall.
+                    set_iptable_rules_for_rtp(rtpPinholeBuffer, rtpDscpMark, rtpSkbMark, VOICE_HAL_AF_INET_V6, ADD_RULE);
+                    strncpy(presentList, rtpPinholeBuffer, sizeof(presentList));
                 }
-                if(addList[0] != '\0')
+
+                sysevent_set(sysevent_voice_fd, sysevent_voice_token, SYSEVENT_VOICE_IPV6_RTPLIST, presentList, 0);
+                CcspTraceInfo(("[%s:%d] SYSEVENT_VOICE_IPV6_RTPLIST %s\n", __FUNCTION__, __LINE__, presentList));
+
+                if(FirewallRuleData[0] == 0)
+                { // Need to restart the firewall to remove the SIP rules in case of clearing the data model.
+                    prevRtpRuleData[0] = 0;
+                }
+
+                if((rtpPinholeBuffer[0] == '\0') && (prevRtpRuleData[0] == '\0'))
                 {
-                    set_iptable_rules_for_rtp(addList, rtpDscpMark, rtpSkbMark, VOICE_HAL_AF_INET_V6, ADD_RULE);
+                    //Restart firewall for only SIP events.
+                    //Iptable rules for RTP are explicitly added without firewall restart.
+                    firewall_restart_for_voice(UTOPIA_FIREWALL_RESTART_TIMEOUT_MS);
                 }
             }
-            else if (rtpPinholeBuffer[0] != '\0')
+            else
             {
-                //For RTP events, set sysevent and apply iptable rules from here, do not restart firewall.
-                set_iptable_rules_for_rtp(rtpPinholeBuffer, rtpDscpMark, rtpSkbMark, VOICE_HAL_AF_INET_V6, ADD_RULE);
-                strncpy(presentList, rtpPinholeBuffer, sizeof(presentList));
+                CcspTraceError (( "%s %d - firewall rules are not applied! \n", __FUNCTION__, __LINE__ ));
             }
 
-            sysevent_set(sysevent_voice_fd, sysevent_voice_token, SYSEVENT_VOICE_IPV6_RTPLIST, presentList, 0);
-            CcspTraceInfo(("[%s:%d] SYSEVENT_VOICE_IPV6_RTPLIST %s\n", __FUNCTION__, __LINE__, presentList));
-
-            if(FirewallRuleData[0] == 0)
-            { // Need to restart the firewall to remove the SIP rules in case of clearing the data model.
-                prevRtpRuleData[0] = 0;
-            }
-
-            if((rtpPinholeBuffer[0] == '\0') && (prevRtpRuleData[0] == '\0'))
-            {
-                //Restart firewall for only SIP events.
-                //Iptable rules for RTP are explicitly added without firewall restart.
-                firewall_restart_for_voice(UTOPIA_FIREWALL_RESTART_TIMEOUT_MS);
-            }
             /* Save previous data and delete old rules in next iteration.*/
             snprintf(prevRtpRuleData,sizeof(prevRtpRuleData), "%s", presentList);
             prevRtpDscpMark = rtpDscpMark;
