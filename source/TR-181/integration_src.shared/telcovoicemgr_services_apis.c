@@ -511,8 +511,8 @@ static ANSC_STATUS set_iptable_rules_for_rtp(char *inputBuffer, UINT rtpDscpValu
             if(!strcmp(action, ADD_RULE))
             {
                 snprintf((char*)&ipTableRule[0],sizeof(ipTableRule),
-                                "%s -t mangle -A VOICE_MANGLE -d %s -p udp -m udp --sport %s -j MARK --set-xmark %lu/%lu;\
-                                %s -t mangle -A VOICE_MANGLE -d %s -p udp -m udp --sport %s -j DSCP --set-dscp %lu\n",
+                                "%s -t mangle -A VOICE_MANGLE -d %s -p udp -m udp --sport %s -j MARK --set-xmark %u/%u;\
+                                %s -t mangle -A VOICE_MANGLE -d %s -p udp -m udp --sport %s -j DSCP --set-dscp %u\n",
                                 ipTableVersion, addr, port, rtpSkbMark, rtpSkbMark,
                                 ipTableVersion, addr, port, rtpDscpValue);
                 system(ipTableRule);
@@ -524,10 +524,10 @@ static ANSC_STATUS set_iptable_rules_for_rtp(char *inputBuffer, UINT rtpDscpValu
                 snprintf((char*)&ipTableRule[0],sizeof(ipTableRule),"%s -D VOICE -s %s -i %s -p udp -m udp --dport %s -j ACCEPT\n", ipTableVersion, addr, PHY_WAN_IF_NAME, port);
                 system(ipTableRule);
 
-                snprintf((char*)&ipTableRule[0],sizeof(ipTableRule),"%s -t mangle -D VOICE_MANGLE -d %s -p udp -m udp --sport %s -j DSCP --set-dscp %lu\n", ipTableVersion, addr, port, rtpDscpValue);
+                snprintf((char*)&ipTableRule[0],sizeof(ipTableRule),"%s -t mangle -D VOICE_MANGLE -d %s -p udp -m udp --sport %s -j DSCP --set-dscp %u\n", ipTableVersion, addr, port, rtpDscpValue);
                 system(ipTableRule);
 
-                snprintf((char*)&ipTableRule[0],sizeof(ipTableRule),"%s -t mangle -D VOICE_MANGLE -d %s -p udp -m udp --sport %s -j MARK --set-xmark %lu/%lu\n", ipTableVersion, addr, port, rtpSkbMark, rtpSkbMark);
+                snprintf((char*)&ipTableRule[0],sizeof(ipTableRule),"%s -t mangle -D VOICE_MANGLE -d %s -p udp -m udp --sport %s -j MARK --set-xmark %u/%u\n", ipTableVersion, addr, port, rtpSkbMark, rtpSkbMark);
                 system(ipTableRule);
             }
 
