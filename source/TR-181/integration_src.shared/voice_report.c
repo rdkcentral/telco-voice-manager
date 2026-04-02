@@ -2258,33 +2258,37 @@ void macToLower(char macValue[])
 
 char *getDeviceMac()
 {
-    char server_ip[16] = {0};
-    int fd = 0,server_port;
-    unsigned int token;
+    int fd = 0;
+    token_t token;
+    char *sysevent_ip = "127.0.0.1";
 
     CcspTraceInfo((" VOICE REPORT %s ENTER\n", __FUNCTION__));
 
     //Open sysevent
-    snprintf(server_ip, sizeof(server_ip), "127.0.0.1");
-    server_port = SE_SERVER_WELL_KNOWN_PORT;
-
-    fd = sysevent_open(server_ip, server_port, SE_VERSION, "voice_report", &token);
-    if (!fd) {
+    fd = sysevent_open(sysevent_ip, SE_SERVER_WELL_KNOWN_PORT, SE_VERSION, "voice_report", &token);
+    if(fd < 0)
+    {
+        CcspTraceInfo(("sysevent_open failed! Invalid socket descriptor"));
         return NULL;
     }
 
     if (!strlen(deviceMAC))
     {
+        int ret;
         char deviceMACValue[32] = {'\0'};
 
-        if (CCSP_SUCCESS == sysevent_get(fd, token, "eth_wan_mac", deviceMACValue, sizeof(deviceMACValue)) && deviceMACValue[0] != '\0')
+        ret = sysevent_get(fd, token, "eth_wan_mac", deviceMACValue, sizeof(deviceMACValue));
+        if ( ret == 0 &&  deviceMACValue[0] != '\0')
         {
             pthread_mutex_lock(&device_mac_mutex);
             macToLower(deviceMACValue);
             pthread_mutex_unlock(&device_mac_mutex);
             CcspTraceInfo(("deviceMAC is %s\n", deviceMAC));
         }
-
+        else
+        {
+            CcspTraceInfo(("Either sysevent_get failed or unable to get eth_wan_mac. Return Value : %d, deviceMACValue[0]: %c \n", ret, deviceMACValue[0]));
+        }
     }
 
     //Close sysevent
