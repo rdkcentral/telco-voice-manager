@@ -463,11 +463,11 @@ static void event_set_wan_status (void)
             {
                 if (sysevent_get(sysevent_rw_fd, sysevent_token, SYSEVENT_CURRENT_WAN_IFNAME, ifName, sizeof(ifName)) == 0)
                 {
-                    char sysevent_param_name[32] = {0};
+                    char sysevent_param_name[128] = {0};
                     snprintf(sysevent_param_name, sizeof(sysevent_param_name), SYSEVENT_IPV6_IP_ADDRESS, ifName);
                     if (sysevent_get(sysevent_rw_fd, sysevent_token, sysevent_param_name, ipAddr, sizeof(ipAddr)) == 0)
                     {
-                        CcspTraceInfo(("%s:: WAN IPv6 Address updated! { %s }\n", __FUNCTION__, ipAddr));
+                        CcspTraceInfo(("%s:: WAN IPv6 Address sysevent %s updated!  { %s }\n", __FUNCTION__, sysevent_param_name , ipAddr));
                         CcspTraceNotice(("TELCOVOICEMANAGER_IPV6_WANUP :: Voice Manager: IPV6 WAN up\n"));
                         //update the SKBmark reading from Wan Manager
 
