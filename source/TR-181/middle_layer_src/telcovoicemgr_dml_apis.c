@@ -21,6 +21,7 @@
 #include "ccsp_dm_api.h"
 #include "telcovoicemgr_dml_backendmgr.h"
 #include "telcovoicemgr_dml_hal.h"
+#include "telcovoicemgr_dhcp_voice.h"
 #include "voice_report.h"
 #ifdef RBUS_BUILD_FLAG_ENABLE
 #include "telcovoicemgr_rbus_handler_apis.h"
@@ -193,6 +194,12 @@ ANSC_STATUS TelcoVoiceMgrServicesInitialize(ANSC_HANDLE hThisObject)
         CcspTraceError(("%s %d - Rbus Init failed !\n", __FUNCTION__, __LINE__ ));
     }
 #endif // RBUS_BUILD_FLAG_ENABLE
+
+    /* DHCP driven voice provisioning. Self disables when VoiceSupport_Enabled is unset. */
+    if(TelcoVoiceMgrDhcpVoice_Init() != ANSC_STATUS_SUCCESS)
+    {
+        CcspTraceError(("%s %d - TelcoVoiceMgrDhcpVoice_Init failed !\n", __FUNCTION__, __LINE__ ));
+    }
 
     return returnStatus;
 }

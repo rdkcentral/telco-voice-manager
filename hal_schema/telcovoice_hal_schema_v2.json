@@ -908,6 +908,9 @@
         { "$ref": "#/definitions/voiceServiceX_RDK_TimeOffset" },
         { "$ref": "#/definitions/voiceServiceX_RDK_FactoryReset" },
         { "$ref": "#/definitions/voiceServiceX_RDK_DnsServers" },
+        { "$ref": "#/definitions/voiceServiceX_RDK_SysAccess" },
+        { "$ref": "#/definitions/voiceServiceX_RDK_SysAccessString" },
+        { "$ref": "#/definitions/voiceServiceX_RDK_SysAccessBoolean" },
         { "$ref": "#/definitions/voiceServiceX_RDK_Debug" },
         { "$ref": "#/definitions/voiceServiceX_RDK_DebugCCTKTraceGroup" },
         { "$ref": "#/definitions/voiceServiceX_RDK_DebugCCTKTraceLevel" },
@@ -1228,6 +1231,9 @@
         { "$ref": "#/definitions/voiceServiceX_RDK_Status" },
         { "$ref": "#/definitions/voiceServiceX_RDK_FactoryReset" },
         { "$ref": "#/definitions/voiceServiceX_RDK_DnsServers" },
+        { "$ref": "#/definitions/voiceServiceX_RDK_SysAccessString" },
+        { "$ref": "#/definitions/voiceServiceX_RDK_SysAccessBoolean" },
+        { "$ref": "#/definitions/voiceServiceX_RDK_PktcCapabilities" },
         { "$ref": "#/definitions/voiceServiceX_RDK_OngoingEmergencyCall" },
         { "$ref": "#/definitions/voiceServiceX_RDK_LocalTimeZone" },
         { "$ref": "#/definitions/voiceServiceX_RDK_Debug" },
@@ -1740,6 +1746,79 @@
         "value": {
           "type": "string",
           "maxLength": 256
+        }
+      }
+    },
+    "voiceServiceX_RDK_SysAccess": {
+      "description": "Voice dependent system configuration object. Carries the DHCP provisioning snapshot for the interface the voice service is bound to. (Access = Read-Write)",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^Device\\.Services\\.VoiceService\\.\\d+\\.X_RDK_SysAccess\\.$"
+        },
+        "type": {
+          "type": "string",
+          "const": "object"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "voiceServiceX_RDK_SysAccessString": {
+      "description": "String members of the voice DHCP provisioning snapshot. Ipv4NextServerIp is the DHCPv4 siaddr/TFTP server, Ipv4BootFileName is option 67, Ipv4LogServerIp is option 7, Ipv4HostName is option 12, Ipv4DomainName is option 15, Ipv4ProvServer is option 122 suboption 3. Ipv6TftpServerIp/Ipv6TftpFileName/Ipv6SyslogServerIp are option 17 suboptions 32/33/34, Ipv6ProvServerIp is option 17 suboption 2171 subelement 3, Ipv6DomainName is option 24 and Ipv6ClientFqdn is option 39. (Access = Read-Write)",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^Device\\.Services\\.VoiceService\\.\\d+\\.X_RDK_SysAccess\\.X_RDK_(IfName|Ipv4Addr|Ipv4NextServerIp|Ipv4ServerHostName|Ipv4BootFileName|Ipv4DnsServers|Ipv4LogServerIp|Ipv4HostName|Ipv4DomainName|Ipv4ProvServer|Ipv6Addr|Ipv6TftpServerIp|Ipv6TftpFileName|Ipv6SyslogServerIp|Ipv6ProvServerIp|Ipv6DnsServers|Ipv6DomainName|Ipv6ClientFqdn)$"
+        },
+        "type": {
+          "type": "string",
+          "const": "string"
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 256
+        }
+      }
+    },
+    "voiceServiceX_RDK_SysAccessBoolean": {
+      "description": "Link state members of the voice DHCP provisioning snapshot. (Access = Read-Write)",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^Device\\.Services\\.VoiceService\\.\\d+\\.X_RDK_SysAccess\\.X_RDK_(IsPhyUp|IsIpv4Up|IsIpv6Up)$"
+        },
+        "type": {
+          "type": "string",
+          "const": "boolean"
+        },
+        "value": {
+          "type": "boolean"
+        }
+      }
+    },
+    "voiceServiceX_RDK_PktcCapabilities": {
+      "description": "PacketCable capability set reported by the voice stack, used to build the DHCP option 60 / option 17 suboption 35 vendor payload. Comma separated list of: pktcblVersion,numEndpoints,tgtSupport,httpDownload,nvramInfoStorage,supportedCodecs,silenceSuppression,echoCancellation,ugsAd,ifIndexStart,supportedProvFlow,t38Version,t38ErrorCorrection,rfc2833,voiceMetrics,supportedMibs,multiGrants,v152,certBootstrapping,ipAddrProvCap (Access = Read-Only)",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^Device\\.Services\\.VoiceService\\.\\d+\\.X_RDK_PktcCapabilities$"
+        },
+        "type": {
+          "type": "string",
+          "const": "string"
+        },
+        "value": {
+          "type": "string"
         }
       }
     },
