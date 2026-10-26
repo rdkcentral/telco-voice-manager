@@ -511,13 +511,60 @@ static void event_set_wan_status (void)
     }
 }
 
+/*firewall_status_resync
+*
+* @description : Re-read firewall status from sysevent
+* If the firewall is still starting, keep checking every 10 ms for up to 5 more seconds
+*
+* @return The status of the operation.
+* @retval ANSC_STATUS_SUCCESS if successful.
+* @retval ANSC_STATUS_FAILURE if any error is detected
+*/
+static int firewall_status_resync(void)
+{
+    char val[32] = {0};
+    int ret = ANSC_STATUS_FAILURE;
+    int waited_ms = 0;
+
+    while (waited_ms < 5000)
+    {
+        // Check sysevent on each 10ms for 5 seconds if status is starting
+        memset(val, 0, sizeof(val));
+        if (sysevent_get(sysevent_voice_fd, sysevent_voice_token, SYSEVENT_FIREWALL_STATUS, val, sizeof(val)) != 0)
+        {
+            return ret;
+        }
+        if ((strncmp(val, "starting", 8) != 0) || (waited_ms >= 5000))
+        {
+            break;
+        }
+        usleep(10000);
+        waited_ms += 10;
+    }
+    if (pthread_mutex_lock(&firewall_status_mutex) == 0)
+    {
+        if (!strncmp(val, "started", 7))
+        {
+            firewall_status = FIREWALLSTATUS_STARTED;
+            ret = ANSC_STATUS_SUCCESS;
+        }
+        else if (!strncmp(val, "starting", 8))
+        {
+            firewall_status = FIREWALLSTATUS_STARTING;
+            CcspTraceError(("%s %d - firewall status resync timed out, current state=%s\n", __FUNCTION__, __LINE__,val));
+        }
+        pthread_mutex_unlock(&firewall_status_mutex);
+    }
+    return ret;
+}
+
 /*check_and_wait_for_firewall
 *
 * @description : Wait for firewall running state and Update firewall rule
 *
 * @return The status of the operation.
 * @retval ANSC_STATUS_SUCCESS if successful.
-* @retval ANSC_STATUS_FAILURE if any error is detected
+* @retval ANSC_STATUS_UNDETERMINED if any error is detected
 */
 int check_and_wait_for_firewall(unsigned long timeout_ms)
 {
@@ -558,7 +605,16 @@ int check_and_wait_for_firewall(unsigned long timeout_ms)
 
     if (ret == ANSC_STATUS_UNDETERMINED)
     {
-        CcspTraceError (( "%s %d - firewall status get timeout \n", __FUNCTION__, __LINE__ ));
+        ret = firewall_status_resync();
+
+        if (ret == ANSC_STATUS_SUCCESS)
+        {
+            CcspTraceInfo(( "%s %d - firewall status resync success \n", __FUNCTION__, __LINE__ ));
+        }
+        else
+        {
+            CcspTraceError(( "%s %d - firewall status  resync timedout\n", __FUNCTION__, __LINE__ ));
+        }
     }
 
     return ret;
@@ -630,9 +686,18 @@ int firewall_restart_for_voice(unsigned long timeout_ms)
         gettimeofday(&tnow, NULL);
     }
 
-    if(ret == ANSC_STATUS_UNDETERMINED)
+    if (ret == ANSC_STATUS_UNDETERMINED)
     {
-        CcspTraceError (( "%s %d - firewall restart timeout\n", __FUNCTION__, __LINE__ ));
+        ret = firewall_status_resync();
+
+        if (ret == ANSC_STATUS_SUCCESS)
+        {
+            CcspTraceInfo(( "%s %d - firewall status resync success \n", __FUNCTION__, __LINE__ ));
+        }
+        else
+        {
+            CcspTraceError(( "%s %d - firewall status  resync timedout\n", __FUNCTION__, __LINE__ ));
+        }
     }
 
     return ret;

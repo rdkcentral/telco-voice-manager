@@ -3043,6 +3043,8 @@ ANSC_STATUS TelcoVoiceMgrDmlSetX_RDK_FirewallRuleData(char * FirewallRuleData, U
     static TELCOVOICEMGR_VOICE_IP_ADD_FAMILY previpAddressFamily = VOICE_HAL_AF_INET_V4;
     uint sipSkbMark = 0, rtpSkbMark = 0, sipDscpMark = 0, rtpDscpMark = 0;
 
+    CcspTraceInfo(("[%s: %d] \n", __FUNCTION__, __LINE__));
+
     if(!FirewallRuleData)
     {
         CcspTraceWarning(("%s Null Value passed, set failed\n", __FUNCTION__));

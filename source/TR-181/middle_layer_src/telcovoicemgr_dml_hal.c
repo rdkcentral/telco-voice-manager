@@ -1291,16 +1291,18 @@ void eventcb_FirewallRuleData(const char *msg, const int len)
             if(ANSC_STATUS_FAILURE == telcovoicemgr_hal_get_voiceService_index(event_name, VOICE_SERVICE_TABLE_NAME, &uVsIndex))
 #endif
             {
+                CcspTraceError(("[%s: %d] telcovoicemgr_hal_get_voiceService_index failed\n", __FUNCTION__, __LINE__));
                 return /* ANSC_STATUS_FAILURE */;
             }
             if( uVsIndex <= 0 )
             {
-                AnscTraceError(("\n%s:%d:: \nInvalid index ParamName[%s]", __FUNCTION__, __LINE__, event_name));
+                CcspTraceError(("[%s: %d] Invalid index ParamName[%s]\n", __FUNCTION__, __LINE__, event_name));
                 return /* ANSC_STATUS_FAILURE */;
             }
             TELCOVOICEMGR_DML_DATA*  pTelcoVoiceMgrData = TelcoVoiceMgrDmlGetDataLocked();
             if(pTelcoVoiceMgrData != NULL)
             {
+                CcspTraceInfo(("[%s: %d] Got lock for updating [%s]\n", __FUNCTION__, __LINE__, event_name));
                 DML_VOICE_SERVICE_CTRL_T* pVoiceService = pTelcoVoiceMgrData->Service.VoiceService.pdata[uVsIndex - 1];
                 pDmlVoiceService = &(pVoiceService->dml);
                 if(pDmlVoiceService == NULL)
@@ -1312,6 +1314,7 @@ void eventcb_FirewallRuleData(const char *msg, const int len)
                     if(pDmlVoiceService == NULL)
                     {
                         TelcoVoiceMgrDmlGetDataRelease(pTelcoVoiceMgrData);
+                        CcspTraceError(("[%s: %d] Failed to release lock\n", __FUNCTION__, __LINE__));
                         return /* ANSC_STATUS_FAILURE */;
                     }
                 }
@@ -1326,11 +1329,11 @@ void eventcb_FirewallRuleData(const char *msg, const int len)
                 ret =  TelcoVoiceMgrDmlSetX_RDK_FirewallRuleData(FirewallRuleBuffer, uVsIndex, uVpQuantity);
                 if(ret == ANSC_STATUS_SUCCESS)
                 {
-                    CcspTraceDebug(("[%s: %d] Sysevent set for firewall rules success\n", __FUNCTION__, __LINE__));
+                    CcspTraceInfo(("[%s: %d] Sysevent set for firewall rules success\n", __FUNCTION__, __LINE__));
                 }
                 else
                 {
-                    CcspTraceWarning(("[%s: %d] Sysevent set for firewall rules failed\n", __FUNCTION__, __LINE__));
+                    CcspTraceInfo(("[%s: %d] Sysevent set for firewall rules failed\n", __FUNCTION__, __LINE__));
                 }
             }
         }
