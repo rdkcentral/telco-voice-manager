@@ -1,0 +1,283 @@
+{
+  "_comment": "Component Build Configuration for Coverity/Native Builds",
+  "_version": "2.0",
+  "_description": "Defines dependencies and build settings for the native component",
+  "dependencies": {
+    "_comment": "External repositories needed by this component",
+    "repos": [
+      {
+        "name": "json-c",
+        "repo": "https://github.com/json-c/json-c.git",
+        "branch": "json-c-0.17-20230812",
+        "build": {
+          "type": "commands",
+          "commands": [
+            "rm -rf build && cmake -S . -B build -DCMAKE_INSTALL_PREFIX=$HOME/usr -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DBUILD_APPS=OFF -DDISABLE_EXTRA_LIBS=ON",
+            "cmake --build build -j$(nproc)",
+            "cmake --install build"
+          ]
+        }
+      },
+      {
+        "name": "cJSON",
+        "repo": "https://github.com/DaveGamble/cJSON.git",
+        "branch": "v1.7.18",
+        "build": {
+          "type": "commands",
+          "commands": [
+            "cmake -S . -B build -DCMAKE_INSTALL_PREFIX=$HOME/usr -DENABLE_CJSON_TEST=OFF -DBUILD_SHARED_LIBS=ON",
+            "cmake --build build -j$(nproc)",
+            "cmake --install build"
+          ]
+        }
+      },
+      {
+        "name": "msgpack-c",
+        "repo": "https://github.com/msgpack/msgpack-c.git",
+        "branch": "c_master",
+        "build": {
+          "type": "commands",
+          "commands": [
+            "cmake -S . -B build -DCMAKE_INSTALL_PREFIX=$HOME/usr -DMSGPACK_BUILD_TESTS=OFF -DMSGPACK_BUILD_EXAMPLES=OFF",
+            "cmake --build build -j$(nproc)",
+            "cmake --install build"
+          ]
+        }
+      },
+      {
+        "name": "rbus",
+        "repo": "https://github.com/rdkcentral/rbus.git",
+        "branch": "v2.7.0",
+        "header_paths": [
+          {
+            "source": "include",
+            "destination": "$HOME/usr/include/rdkb/rbus"
+          },
+          {
+            "source": "src/rbus",
+            "destination": "$HOME/usr/include/rdkb/rbus"
+          },
+          {
+            "source": "src/core",
+            "destination": "$HOME/usr/include/rdkb/rbus"
+          },
+          {
+            "source": "src/rtmessage",
+            "destination": "$HOME/usr/include/rdkb/rtmessage"
+          }
+        ],
+        "build": {
+          "type": "cmake",
+          "build_dir": "build",
+          "cmake_flags": "-DCMAKE_INSTALL_PREFIX=$HOME/usr -DCMAKE_PREFIX_PATH=/usr -DBUILD_FOR_DESKTOP=ON -DCMAKE_BUILD_TYPE=Debug -DMSGPACK_LIBRARIES=$HOME/usr/lib/libmsgpack-c.so -DMSGPACK_INCLUDE_DIRS=$HOME/usr/include"
+        }
+      },
+      {
+        "name": "avro",
+        "repo": "https://github.com/apache/avro.git",
+        "branch": "release-1.11.3",
+        "header_paths": [
+          {
+            "source": "lang/c/src",
+            "destination": "$HOME/usr/include/rdkb"
+          },
+          {
+            "source": "lang/c/src/avro",
+            "destination": "$HOME/usr/include/rdkb/avro"
+          }
+        ]
+      },
+      {
+        "name": "libparodus",
+        "repo": "https://github.com/Comcast/libparodus.git",
+        "branch": "master",
+        "header_paths": [
+          {
+            "source": "src",
+            "destination": "$HOME/usr/include/rdkb/libparodus"
+          }
+        ]
+      },
+      {
+        "name": "rdk_logger",
+        "repo": "https://github.com/rdkcentral/rdk_logger.git",
+        "branch": "v2.4.0",
+        "header_paths": [
+          {
+            "source": "include",
+            "destination": "$HOME/usr/include/rdkb"
+          }
+        ]
+      },
+      {
+        "name": "WebconfigFramework",
+        "repo": "https://github.com/rdkcentral/WebconfigFramework.git",
+        "branch": "develop",
+        "header_paths": [
+          {
+            "source": "include",
+            "destination": "$HOME/usr/include/rdkb"
+          }
+        ]
+      },
+      {
+        "name": "json-hal-library",
+        "repo": "https://github.com/rdkcentral/json-hal-library.git",
+        "branch": "develop",
+        "header_paths": [
+          {
+            "source": ".",
+            "destination": "$HOME/usr/include/rdkb"
+          }
+        ]
+      },
+      {
+        "name": "Utopia-headers",
+        "repo": "https://github.com/rdkcentral/utopia.git",
+        "branch": "main",
+        "header_paths": [
+          {
+            "source": "source/include/sysevent",
+            "destination": "$HOME/usr/include/rdkb/sysevent"
+          },
+          {
+            "source": "source/sysevent/lib",
+            "destination": "$HOME/usr/include/rdkb/sysevent"
+          },
+          {
+            "source": "source/include/syscfg",
+            "destination": "$HOME/usr/include/rdkb/syscfg"
+          },
+          {
+            "source": "source/include",
+            "destination": "$HOME/usr/include/rdkb"
+          }
+        ]
+      },
+      {
+        "name": "safec",
+        "repo": "https://github.com/rurban/safeclib.git",
+        "branch": "master",
+        "header_paths": [
+          {
+            "source": "include",
+            "destination": "$HOME/usr/include/rdkb"
+          }
+        ],
+        "build": {
+          "type": "autotools"
+        }
+      },
+      {
+        "name": "trower-base64",
+        "repo": "https://github.com/xmidt-org/trower-base64.git",
+        "branch": "v1.2.7",
+        "header_paths": [
+          {
+            "source": "include/trower-base64",
+            "destination": "$HOME/usr/include/rdkb"
+          },
+          {
+            "source": "include/trower-base64",
+            "destination": "$HOME/usr/include/rdkb/trower-base64"
+          }
+        ],
+        "build": {
+          "type": "commands",
+          "commands": [
+            "gcc -shared -fPIC -Iinclude -Iinclude/trower-base64 -o libtrower-base64.so src/base64.c"
+          ]
+        }
+      },
+      {
+        "name": "wrp-c",
+        "repo": "https://github.com/xmidt-org/wrp-c.git",
+        "branch": "2.0.0",
+        "header_paths": [
+          {
+            "source": "src",
+            "destination": "$HOME/usr/include/rdkb/wrp-c"
+          }
+        ]
+      },
+      {
+        "name": "common-library",
+        "repo": "https://github.com/rdkcentral/common-library.git",
+        "branch": "develop",
+        "header_paths": [
+          {
+            "source": "source/ccsp/include",
+            "destination": "$HOME/usr/include/rdkb"
+          },
+          {
+            "source": "source/ccsp/components/include",
+            "destination": "$HOME/usr/include/rdkb"
+          },
+          {
+            "source": "source/ccsp/custom",
+            "destination": "$HOME/usr/include/rdkb"
+          },
+          {
+            "source": "source/cosa/include",
+            "destination": "$HOME/usr/include/rdkb"
+          },
+          {
+            "source": "source/cosa/include/linux",
+            "destination": "$HOME/usr/include/rdkb"
+          },
+          {
+            "source": "source/cosa/include/linux",
+            "destination": "$HOME/usr/include/rdkb/linux"
+          },
+          {
+            "source": "source/cosa/package/slap/include",
+            "destination": "$HOME/usr/include/rdkb"
+          },
+          {
+            "source": "source/debug_api/include",
+            "destination": "$HOME/usr/include/rdkb"
+          },
+          {
+            "source": "source/util_api/http/include",
+            "destination": "$HOME/usr/include/rdkb"
+          },
+          {
+            "source": "source/util_api/ansc/include",
+            "destination": "$HOME/usr/include/rdkb"
+          },
+          {
+            "source": "source/ccsp/components/common/MessageBusHelper/include",
+            "destination": "$HOME/usr/include/rdkb"
+          },
+          {
+            "source": "source/dm_pack",
+            "destination": "$HOME/usr/include/rdkb"
+          }
+        ],
+        "build": {
+          "type": "commands",
+          "commands": [
+            "build_tools_workflows/cov_docker_script/build_native.sh cov_docker_script/component_config.json $PWD"
+          ]
+        }
+      }
+    ]
+  },
+  "native_component": {
+    "_comment": "Configuration for the main component being built",
+    "name": "telco-voice-manager",
+    "include_path": "$HOME/usr/include/rdkb/",
+    "lib_output_path": "$HOME/usr/local/lib/",
+    "source_patches": [],
+    "build": {
+      "type": "autotools",
+      "configure_options_file": "cov_docker_script/configure_options.conf"
+    },
+    "pre_build_commands": [
+      {
+        "description": "Generate dm_pack_datamodel.c from the TR-104 v2 data model XML",
+        "command": "python3 $HOME/usr/include/rdkb/dm_pack_code_gen.py config/RdkTelcoVoiceManager_v2.xml source/TelcoVoiceManager/dm_pack_datamodel.c"
+      }
+    ]
+  }
+}
