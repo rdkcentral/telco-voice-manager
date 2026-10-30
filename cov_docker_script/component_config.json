@@ -88,15 +88,33 @@
         ]
       },
       {
+        "name": "nanomsg",
+        "repo": "https://github.com/nanomsg/nanomsg.git",
+        "branch": "1.2.1",
+        "build": {
+          "type": "commands",
+          "commands": [
+            "cmake -S . -B build -DCMAKE_INSTALL_PREFIX=$HOME/usr -DNN_TESTS=OFF -DNN_TOOLS=OFF -DNN_ENABLE_DOC=OFF",
+            "cmake --build build -j$(nproc)",
+            "cmake --install build"
+          ]
+        }
+      },
+      {
         "name": "libparodus",
-        "repo": "https://github.com/Comcast/libparodus.git",
+        "repo": "https://github.com/xmidt-org/libparodus.git",
         "branch": "master",
         "header_paths": [
           {
             "source": "src",
             "destination": "$HOME/usr/include/rdkb/libparodus"
           }
-        ]
+        ],
+        "build": {
+          "type": "cmake",
+          "build_dir": "build",
+          "cmake_flags": "-DCMAKE_INSTALL_PREFIX=$HOME/usr -DCMAKE_C_FLAGS=\"-I$HOME/usr/include/rdkb -I$HOME/usr/include\" -DBUILD_TESTING=OFF -DMAIN_PROJ_BUILD=ON"
+        }
       },
       {
         "name": "rdk_logger",
@@ -107,7 +125,11 @@
             "source": "include",
             "destination": "$HOME/usr/include/rdkb"
           }
-        ]
+        ],
+        "build": {
+          "type": "autotools",
+          "configure_flags": "LOG4C_CFLAGS=\"-I$HOME/usr/log4c-dev/usr/include\" LOG4C_LIBS=\"-L$HOME/usr/log4c-dev/usr/lib/x86_64-linux-gnu -llog4c\""
+        }
       },
       {
         "name": "WebconfigFramework",
@@ -277,6 +299,10 @@
       {
         "description": "Generate dm_pack_datamodel.c from the TR-104 v2 data model XML",
         "command": "python3 $HOME/usr/include/rdkb/dm_pack_code_gen.py config/RdkTelcoVoiceManager_v2.xml source/TelcoVoiceManager/dm_pack_datamodel.c"
+      },
+      {
+        "description": "Create stand-in libraries for link-only dependencies",
+        "command": "bash cov_docker_script/create_stub_libs.sh"
       }
     ]
   }
