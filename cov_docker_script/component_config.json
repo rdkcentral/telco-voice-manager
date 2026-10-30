@@ -170,7 +170,7 @@
         "build": {
           "type": "cmake",
           "build_dir": "build",
-          "cmake_flags": "-DCMAKE_INSTALL_PREFIX=$HOME/usr -DCMAKE_PREFIX_PATH=$HOME/usr -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS=-Wno-error=stringop-truncation",
+          "cmake_flags": "-DCMAKE_INSTALL_PREFIX=$HOME/usr -DCMAKE_PREFIX_PATH=$HOME/usr -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS=\"-I$HOME/usr/include -Wno-error=stringop-truncation\"",
           "make_targets": [
             "json_hal_client"
           ]
