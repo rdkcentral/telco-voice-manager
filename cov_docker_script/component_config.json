@@ -101,6 +101,17 @@
         }
       },
       {
+        "name": "wrp-c",
+        "repo": "https://github.com/xmidt-org/wrp-c.git",
+        "branch": "2.0.0",
+        "header_paths": [
+          {
+            "source": "src",
+            "destination": "$HOME/usr/include/rdkb/wrp-c"
+          }
+        ]
+      },
+      {
         "name": "libparodus",
         "repo": "https://github.com/xmidt-org/libparodus.git",
         "branch": "master",
@@ -210,17 +221,6 @@
             "gcc -shared -fPIC -Iinclude -Iinclude/trower-base64 -o libtrower-base64.so src/base64.c"
           ]
         }
-      },
-      {
-        "name": "wrp-c",
-        "repo": "https://github.com/xmidt-org/wrp-c.git",
-        "branch": "2.0.0",
-        "header_paths": [
-          {
-            "source": "src",
-            "destination": "$HOME/usr/include/rdkb/wrp-c"
-          }
-        ]
       },
       {
         "name": "common-library",

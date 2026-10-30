@@ -13,7 +13,7 @@ trap 'rm -f "$STUB_SRC"' EXIT
 echo "int cov_stub_placeholder;" > "$STUB_SRC"
 
 for lib in webconfig_framework utctx utapi sysevent syscfg rdkloggers libparodus json_hal_client hal_platform avro; do
-    if ! ls "$LIB_DIR/lib${lib}.so" "$HOME/usr/lib/lib${lib}.so" >/dev/null 2>&1; then
+    if [[ ! -e "$LIB_DIR/lib${lib}.so" && ! -e "$HOME/usr/lib/lib${lib}.so" ]]; then
         gcc -shared -fPIC -o "$LIB_DIR/lib${lib}.so" "$STUB_SRC"
     fi
 done
