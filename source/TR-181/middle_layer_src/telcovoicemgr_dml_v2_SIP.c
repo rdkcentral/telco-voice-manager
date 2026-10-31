@@ -475,6 +475,58 @@ ULONG TelcoVoiceMgrDml_SIP_ClientList_GetParamStringValue(ANSC_HANDLE hInsContex
     return ret;
 }
 
+
+/**********************************************************************
+
+    caller:     owner of this object
+
+    prototype:
+
+        BOOL TelcoVoiceMgrDml_SIP_ClientList_SetParamStringValueWithRetry(ANSC_HANDLE hInsContext, char* ParamName, char* pString, int RetryCount);
+
+    description:
+
+        This function is called to set string parameter value;
+
+    argument:   ANSC_HANDLE                 hInsContext,
+                The instance handle;
+
+                char*                       ParamName,
+                The parameter name;
+
+                char*                       pString
+                The updated string value;
+
+                int                       RetryCount
+                Number of retries for setting the parameter in case of failure
+
+    return:     TRUE if succeeded.
+
+**********************************************************************/
+BOOL TelcoVoiceMgrDml_SIP_ClientList_SetParamStringValueWithRetry(ANSC_HANDLE hInsContext, char* ParamName, char* pString, int RetryCount)
+{
+    BOOL ret = FALSE;
+
+    do {
+        ret = TelcoVoiceMgrDml_SIP_ClientList_SetParamStringValue(hInsContext, ParamName, pString);
+        if (ret == TRUE)
+        {
+            break;
+        }
+
+        CcspTraceError(("%s: Webconfig set failed for %s, retrying..\n",__FUNCTION__, ParamName));
+        sleep(1);
+    } while (RetryCount-- > 0);
+
+    if (ret == FALSE)
+    {
+        CcspTraceError(("%s: Webconfig set failed for %s, all retries failed\n",__FUNCTION__, ParamName));
+    }
+
+    return ret;
+}
+
+
 /**********************************************************************
 
     caller:     owner of this object
