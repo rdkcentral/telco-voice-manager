@@ -130,7 +130,7 @@
       {
         "name": "rdk_logger",
         "repo": "https://github.com/rdkcentral/rdk_logger.git",
-        "branch": "main",
+        "branch": "v2.4.0",
         "header_paths": [
           {
             "source": "include",
