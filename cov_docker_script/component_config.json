@@ -8,7 +8,7 @@
       {
         "name": "json-c",
         "repo": "https://github.com/json-c/json-c.git",
-        "branch": "json-c-0.17-20230812",
+        "branch": "master",
         "build": {
           "type": "commands",
           "commands": [
@@ -21,7 +21,7 @@
       {
         "name": "cJSON",
         "repo": "https://github.com/DaveGamble/cJSON.git",
-        "branch": "v1.7.18",
+        "branch": "master",
         "build": {
           "type": "commands",
           "commands": [
@@ -34,7 +34,7 @@
       {
         "name": "msgpack-c",
         "repo": "https://github.com/msgpack/msgpack-c.git",
-        "branch": "c_master",
+        "branch": "master",
         "build": {
           "type": "commands",
           "commands": [
@@ -47,7 +47,7 @@
       {
         "name": "rbus",
         "repo": "https://github.com/rdkcentral/rbus.git",
-        "branch": "v2.7.0",
+        "branch": "main",
         "header_paths": [
           {
             "source": "include",
@@ -75,7 +75,7 @@
       {
         "name": "avro",
         "repo": "https://github.com/apache/avro.git",
-        "branch": "release-1.11.3",
+        "branch": "main",
         "header_paths": [
           {
             "source": "lang/c/src",
@@ -90,7 +90,7 @@
       {
         "name": "nanomsg",
         "repo": "https://github.com/nanomsg/nanomsg.git",
-        "branch": "1.2.1",
+        "branch": "master",
         "build": {
           "type": "commands",
           "commands": [
@@ -103,7 +103,7 @@
       {
         "name": "wrp-c",
         "repo": "https://github.com/xmidt-org/wrp-c.git",
-        "branch": "2.0.0",
+        "branch": "master",
         "header_paths": [
           {
             "source": "src",
@@ -130,7 +130,7 @@
       {
         "name": "rdk_logger",
         "repo": "https://github.com/rdkcentral/rdk_logger.git",
-        "branch": "v2.4.0",
+        "branch": "main",
         "header_paths": [
           {
             "source": "include",
@@ -160,7 +160,7 @@
       {
         "name": "json-hal-library",
         "repo": "https://github.com/rdkcentral/json-hal-library.git",
-        "branch": "develop",
+        "branch": "main",
         "header_paths": [
           {
             "source": ".",
@@ -216,7 +216,7 @@
       {
         "name": "trower-base64",
         "repo": "https://github.com/xmidt-org/trower-base64.git",
-        "branch": "v1.2.7",
+        "branch": "main",
         "header_paths": [
           {
             "source": "include/trower-base64",
