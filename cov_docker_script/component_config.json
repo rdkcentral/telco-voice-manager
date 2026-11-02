@@ -34,7 +34,7 @@
       {
         "name": "msgpack-c",
         "repo": "https://github.com/msgpack/msgpack-c.git",
-        "branch": "master",
+        "branch": "c_master",
         "build": {
           "type": "commands",
           "commands": [
