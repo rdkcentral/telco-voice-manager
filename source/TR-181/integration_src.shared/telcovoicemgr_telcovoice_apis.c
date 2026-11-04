@@ -664,6 +664,7 @@ pErr TelcoVoiceMgr_Process_Webconfig_Request(void *Data)
         {
             WebConfig_SipClientTable_t *pstSipClientCfg = &(pServiceCfg->pstSipClientInfo[j]);
             PDML_SIP_CLIENT_CTRL_T pSipClientCtrl = NULL;
+            int retry = 5; // SHARMAN-3990
 
             uSipClientIndex = pstSipClientCfg->uiSipClientInstanceNumber;
 
@@ -688,7 +689,7 @@ pErr TelcoVoiceMgr_Process_Webconfig_Request(void *Data)
 
             if( TRUE == pstSipClientCfg->IsSIPClientNetworkPresent )
             {
-                if(TelcoVoiceMgrDml_SIP_ClientList_SetParamStringValue(pSipClientCtrl, "Network", pstSipClientCfg->SIPClientNetwork) != TRUE)
+                if(TelcoVoiceMgrDml_SIP_ClientList_SetParamStringValueWithRetry(pSipClientCtrl, "Network", pstSipClientCfg->SIPClientNetwork, retry) != TRUE)
                 {
                     CcspTraceError(("%s: Webconfig set failed for SIPClientNetwork\n",__FUNCTION__));
                     retVal = 1;
@@ -697,7 +698,7 @@ pErr TelcoVoiceMgr_Process_Webconfig_Request(void *Data)
 
             if( TRUE == pstSipClientCfg->IsSIPAuthUserNamePresent )
             {
-                if(TelcoVoiceMgrDml_SIP_ClientList_SetParamStringValue(pSipClientCtrl, "AuthUserName", pstSipClientCfg->SIPAuthUserName) != TRUE)
+                if(TelcoVoiceMgrDml_SIP_ClientList_SetParamStringValueWithRetry(pSipClientCtrl, "AuthUserName", pstSipClientCfg->SIPAuthUserName, retry) != TRUE)
                 {
                     CcspTraceError(("%s: Webconfig set failed for SIPAuthUserName\n",__FUNCTION__));
                     retVal = 1;
@@ -706,7 +707,7 @@ pErr TelcoVoiceMgr_Process_Webconfig_Request(void *Data)
 
             if( TRUE == pstSipClientCfg->IsSIPAuthPasswordPresent )
             {
-                if(TelcoVoiceMgrDml_SIP_ClientList_SetParamStringValue(pSipClientCtrl, "AuthPassword", pstSipClientCfg->SIPAuthPassword) != TRUE)
+                if(TelcoVoiceMgrDml_SIP_ClientList_SetParamStringValueWithRetry(pSipClientCtrl, "AuthPassword", pstSipClientCfg->SIPAuthPassword, retry) != TRUE)
                 {
                     CcspTraceError(("%s: Webconfig set failed for SIPAuthPassword\n",__FUNCTION__));
                     retVal = 1;
@@ -715,7 +716,7 @@ pErr TelcoVoiceMgr_Process_Webconfig_Request(void *Data)
 
             if( TRUE == pstSipClientCfg->IsSIPURIPresent )
             {
-                if(TelcoVoiceMgrDml_SIP_ClientList_SetParamStringValue(pSipClientCtrl, "RegisterURI", pstSipClientCfg->SIPURI) != TRUE)
+                if(TelcoVoiceMgrDml_SIP_ClientList_SetParamStringValueWithRetry(pSipClientCtrl, "RegisterURI", pstSipClientCfg->SIPURI, retry) != TRUE)
                 {
                     CcspTraceError(("%s: Webconfig set failed for SIPURI\n",__FUNCTION__));
                     retVal = 1;
@@ -855,6 +856,7 @@ pErr TelcoVoiceMgr_Process_Webconfig_Request(void *Data)
 #ifdef FEATURE_RDKB_VOICE_DM_TR104_V2
     if(retVal)
     {
+        execRetVal->ErrorCode = BLOB_EXEC_FAILURE;
         CcspTraceError(("%s : Telcovoice Data Provisioning failed for one or more parameters\n",__FUNCTION__));
     }
     else

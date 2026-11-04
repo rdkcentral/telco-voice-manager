@@ -633,7 +633,7 @@ ANSC_STATUS TelcoVoiceMgrHal_SendJsonRequest(json_object *jmsg)
         return RETURN_ERR;
     }
     CHECK(jreply_msg);
-    
+
     if (json_hal_get_result_status(jreply_msg, &status) == RETURN_OK)
     {
         if (status)
