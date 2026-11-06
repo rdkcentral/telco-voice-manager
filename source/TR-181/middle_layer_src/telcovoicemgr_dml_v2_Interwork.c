@@ -365,6 +365,8 @@ BOOL TelcoVoiceMgrDml_InterworkList_SetParamUlongValue(ANSC_HANDLE hInsContext, 
 
     TELCOVOICEMGR_UNLOCK()
 
+    printf("Test Coverity %s\n");
+
     if (strcmp(ParamName, "UserConnectionMode") == 0)
     {
         char enumValue[][STR_LEN_32]={"Static","RegisterDynamic","RegisterLearn"};
