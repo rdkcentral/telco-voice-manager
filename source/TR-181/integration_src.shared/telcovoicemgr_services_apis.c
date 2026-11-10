@@ -2999,7 +2999,7 @@ ANSC_STATUS TelcoVoiceMgrDmlGetSeparateRuleLists(char *prevRtpRuleData, char*cur
 
     // Prepare list of rules to be added newly
     strncpy(tempBuff, currRtpRuleData, sizeof(tempBuff) - 1);
-    tempBuff[sizeof(tempBuff)] = '\0';
+    tempBuff[sizeof(tempBuff) - 1] = '\0';
     pToken = strtok(tempBuff, ";");
     len = 0;
     while( pToken != NULL )
