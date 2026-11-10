@@ -832,8 +832,8 @@ static int harvester_report_voice_service(VoiceServiceReportData *head)
     if (macStr == NULL)
     {
         macStr = getDeviceMac();
-
-        strncpy(CpemacStr, macStr, sizeof(CpemacStr));
+        strncpy(CpemacStr, macStr, sizeof(CpemacStr) - 1);
+        CpemacStr[sizeof(CpemacStr)] = '\0';
         CcspTraceInfo(("Received DeviceMac is: %s\n", macStr));
     }
 
