@@ -2016,6 +2016,7 @@ ANSC_STATUS TelcoVoiceMgrDmlGetX_RDK_LocalTimeZone(char *localTimeZone)
     }
 
     strncpy(localTimeZone, buf, (sizeof(buf) - 1));
+    localTimeZone[sizeof(buf) - 1] = '\0';
 
     return ANSC_STATUS_SUCCESS;
 }
