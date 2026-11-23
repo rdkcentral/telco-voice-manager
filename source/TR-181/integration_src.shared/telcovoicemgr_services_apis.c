@@ -496,7 +496,8 @@ static ANSC_STATUS set_iptable_rules_for_rtp(char *inputBuffer, UINT rtpDscpValu
         return ANSC_STATUS_FAILURE;
     }
 
-    strncpy(buffer, inputBuffer, sizeof(buffer));
+    strncpy(buffer, inputBuffer, sizeof(buffer) - 1);
+    buffer[sizeof(buffer) - 1] = '\0';
     pToken = strtok(buffer, ",");
     while( pToken != NULL )
     {
