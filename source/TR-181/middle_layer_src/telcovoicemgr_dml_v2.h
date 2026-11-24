@@ -351,6 +351,8 @@ ULONG TelcoVoiceMgrDml_SIP_ClientList_GetParamStringValue(ANSC_HANDLE hInsContex
 
 BOOL TelcoVoiceMgrDml_SIP_ClientList_SetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, char* pString);
 
+BOOL TelcoVoiceMgrDml_SIP_ClientList_SetParamStringValueWithRetry(ANSC_HANDLE hInsContext, char* ParamName, char* pString, int retry);
+
 BOOL TelcoVoiceMgrDml_SIP_ClientList_GetParamBoolValue(ANSC_HANDLE hInsContext, char* ParamName, BOOL* pBool);
 
 BOOL TelcoVoiceMgrDml_SIP_ClientList_SetParamBoolValue(ANSC_HANDLE hInsContext, char* ParamName, BOOL bValue);
