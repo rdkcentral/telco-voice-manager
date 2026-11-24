@@ -149,7 +149,8 @@ void voicemgr_create_nw_monitor()
     if(pDmlVoiceService->X_RDK_IpAddressFamily != NULL)
     {
         CcspTraceWarning(("%s:%d:: ipAddrFamily: %s\n", __FUNCTION__, __LINE__, pDmlVoiceService->X_RDK_IpAddressFamily));
-        AnscCopyString(ipAddrFamily, pDmlVoiceService->X_RDK_IpAddressFamily);
+        strncpy(ipAddrFamily, pDmlVoiceService->X_RDK_IpAddressFamily, sizeof(ipAddrFamily) - 1);
+        ipAddrFamily[sizeof(ipAddrFamily) - 1] = '\0';
     }
     else
     {
