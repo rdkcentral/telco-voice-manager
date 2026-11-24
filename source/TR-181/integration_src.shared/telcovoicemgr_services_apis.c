@@ -496,7 +496,8 @@ static ANSC_STATUS set_iptable_rules_for_rtp(char *inputBuffer, UINT rtpDscpValu
         return ANSC_STATUS_FAILURE;
     }
 
-    strncpy(buffer, inputBuffer, sizeof(buffer));
+    strncpy(buffer, inputBuffer, sizeof(buffer) - 1);
+    buffer[sizeof(buffer) - 1] = '\0';
     pToken = strtok(buffer, ",");
     while( pToken != NULL )
     {
@@ -2999,7 +3000,8 @@ ANSC_STATUS TelcoVoiceMgrDmlGetSeparateRuleLists(char *prevRtpRuleData, char*cur
     }
 
     // Prepare list of rules to be added newly
-    strncpy(tempBuff, currRtpRuleData, sizeof(tempBuff));
+    strncpy(tempBuff, currRtpRuleData, sizeof(tempBuff) - 1);
+    tempBuff[sizeof(tempBuff) - 1] = '\0';
     pToken = strtok(tempBuff, ";");
     len = 0;
     while( pToken != NULL )
